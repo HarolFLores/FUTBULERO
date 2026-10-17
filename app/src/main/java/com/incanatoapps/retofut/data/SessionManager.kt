@@ -9,6 +9,8 @@ class SessionManager(context: Context) {
     companion object {
         const val USER_TOKEN = "user_token"
         const val USER_ID = "user_id"
+        const val USER_NAME = "user_name"
+        const val USER_POSITION = "user_position"
     }
 
     fun saveAuthToken(token: String) {
@@ -17,6 +19,22 @@ class SessionManager(context: Context) {
 
     fun saveUserId(userId: Int) {
         prefs.edit().putInt(USER_ID, userId).commit()
+    }
+
+    fun saveUserName(name: String) {
+        prefs.edit().putString(USER_NAME, name).apply()
+    }
+
+    fun fetchUserName(): String? {
+        return prefs.getString(USER_NAME, null)
+    }
+
+    fun savePreferredPosition(position: String) {
+        prefs.edit().putString(USER_POSITION, position).apply()
+    }
+
+    fun fetchPreferredPosition(): String {
+        return prefs.getString(USER_POSITION, "Delantero") ?: "Delantero"
     }
 
     fun fetchAuthToken(): String? {
@@ -28,6 +46,6 @@ class SessionManager(context: Context) {
     }
 
     fun clearAuthToken() {
-        prefs.edit().remove(USER_TOKEN).remove(USER_ID).apply()
+        prefs.edit().clear().apply()
     }
 }

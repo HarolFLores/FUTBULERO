@@ -9,6 +9,12 @@ val BrandGreen = Color(0xFFA3E635)    // Main accent (buttons, active states)
 val BrandGreenSoft = Color(0xFFD9F99D) // Soft background for highlights
 val BrandGreenDeep = Color(0xFF8BBD2B) // For contrast text on green
 
+// ChocoFulbo Mockup Palette
+val DarkForestGreen = Color(0xFF0F3D24)
+val ForestGreen = Color(0xFF143823)
+val LimeNeon = Color(0xFF84E62B)
+val LightButtonGray = Color(0xFFEFEFEF)
+
 // Background & Surfaces
 val AppBackground = Color(0xFFF8FAF5)  // Warm off-white
 val CardWhite = Color(0xFFFFFFFF)      // Pure white for elevation

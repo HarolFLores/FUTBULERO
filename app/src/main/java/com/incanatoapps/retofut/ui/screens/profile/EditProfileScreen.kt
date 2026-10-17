@@ -1,8 +1,11 @@
 package com.incanatoapps.retofut.ui.screens.profile
 
 import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,15 +23,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.incanatoapps.retofut.data.SessionManager
-import com.incanatoapps.retofut.ui.components.MainScaffold
 import com.incanatoapps.retofut.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,34 +39,16 @@ import com.incanatoapps.retofut.ui.theme.*
 fun EditProfileScreen(navController: NavHostController, viewModel: ProfileViewModel = viewModel()) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
-    val token = remember { sessionManager.fetchAuthToken() }
+    val token = sessionManager.fetchAuthToken()
 
-    val profileState = viewModel.profileState
-    val currentUser = if (profileState is ProfileState.Success) profileState.user else null
+    BackHandler { navController.popBackStack() }
 
-    // Estados de los inputs
-    var nombre by remember { mutableStateOf("") }
-    var telefono by remember { mutableStateOf("") }
-    var posicion by remember { mutableStateOf("POR") }
+    var nombre by remember { mutableStateOf(sessionManager.fetchUserName() ?: "Piero Flores") }
+    var telefono by remember { mutableStateOf("974829102") }
+    var posicion by remember { mutableStateOf(sessionManager.fetchPreferredPosition()) }
+    var dorsal by remember { mutableStateOf("10") }
+    var ciudad by remember { mutableStateOf("Pimentel, Chiclayo") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
-    var isInitialized by remember { mutableStateOf(false) }
-
-    // Cargar perfil al iniciar si no está cargado en el ViewModel actual
-    LaunchedEffect(Unit) {
-        if (token != null && profileState !is ProfileState.Success) {
-            viewModel.loadProfile(token)
-        }
-    }
-
-    // Sincronizar datos del usuario con los inputs una vez que el perfil cargue
-    LaunchedEffect(currentUser) {
-        if (currentUser != null && !isInitialized) {
-            nombre = currentUser.nombre
-            telefono = currentUser.telefono ?: ""
-            posicion = currentUser.playerProfile?.posicionPrincipal ?: "POR"
-            isInitialized = true
-        }
-    }
 
     val photoLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -71,44 +56,63 @@ fun EditProfileScreen(navController: NavHostController, viewModel: ProfileViewMo
         selectedImageUri = uri
     }
 
-    val updateState = viewModel.updateState
+    val positionOptions = listOf("Delantero (DC)", "Mediocampista (MC)", "Defensa (DFC)", "Portero (GK)")
 
-    LaunchedEffect(updateState) {
-        if (updateState is UpdateState.Success) {
-            viewModel.resetUpdateState()
-            navController.popBackStack()
-        }
-    }
-
-    MainScaffold(
-        navController = navController,
-        title = "Editar Perfil"
-    ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            if (profileState is ProfileState.Loading && !isInitialized) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = BrandGreen
-                )
-            } else {
-                Column(
+    Scaffold(
+        topBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = { navController.popBackStack() },
                     modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .size(42.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(CardWhite)
+                        .border(1.dp, BorderGray, RoundedCornerShape(12.dp))
                 ) {
-                    if (updateState is UpdateState.Error) {
-                        Text(updateState.message, color = Color.Red, modifier = Modifier.padding(bottom = 16.dp))
-                    }
-
-                    // Selector de Imagen
+                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Atrás", tint = TextPrimary)
+                }
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    "EDITAR PERFIL",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 16.sp,
+                    color = TextPrimary
+                )
+            }
+        },
+        containerColor = Color(0xFFFAFAFA)
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp)
+        ) {
+            // Avatar picker
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(CardWhite)
+                    .border(1.dp, BorderGray, RoundedCornerShape(22.dp))
+                    .padding(20.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(
                         modifier = Modifier
-                            .size(120.dp)
+                            .size(88.dp)
                             .clip(CircleShape)
-                            .background(CardWhite)
-                            .border(2.dp, BrandGreen, CircleShape)
+                            .background(DarkForestGreen)
+                            .border(3.dp, LimeNeon, CircleShape)
                             .clickable { photoLauncher.launch("image/*") },
                         contentAlignment = Alignment.Center
                     ) {
@@ -116,121 +120,181 @@ fun EditProfileScreen(navController: NavHostController, viewModel: ProfileViewMo
                             AsyncImage(
                                 model = selectedImageUri,
                                 contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else if (!currentUser?.foto.isNullOrEmpty()) {
-                            AsyncImage(
-                                model = currentUser?.foto,
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
+                                modifier = Modifier.fillMaxSize()
                             )
                         } else {
-                            Icon(Icons.Outlined.AddAPhoto, null, modifier = Modifier.size(40.dp), tint = BrandGreen)
+                            Text(
+                                nombre.take(2).uppercase(),
+                                color = LimeNeon,
+                                fontWeight = FontWeight.Black,
+                                fontSize = 28.sp
+                            )
                         }
                     }
-                    
                     Spacer(Modifier.height(8.dp))
-                    Text("Cambiar Foto", style = MaterialTheme.typography.labelMedium, color = BrandGreen)
-
-                    Spacer(Modifier.height(32.dp))
-
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(24.dp),
-                        color = CardWhite,
-                        shadowElevation = 2.dp
-                    ) {
-                        Column(modifier = Modifier.padding(20.dp)) {
-                            Text("Información Básica", fontWeight = FontWeight.Bold, color = BrandGreenDeep)
-                            Spacer(Modifier.height(16.dp))
-
-                            OutlinedTextField(
-                                value = nombre,
-                                onValueChange = { nombre = it },
-                                label = { Text("Nombre Completo") },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
-                                leadingIcon = { Icon(Icons.Outlined.Person, null) },
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = BrandGreen,
-                                    focusedLabelColor = BrandGreen
-                                )
-                            )
-
-                            Spacer(Modifier.height(16.dp))
-
-                            OutlinedTextField(
-                                value = telefono,
-                                onValueChange = { telefono = it },
-                                label = { Text("Teléfono") },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
-                                leadingIcon = { Icon(Icons.Outlined.Phone, null) },
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = BrandGreen,
-                                    focusedLabelColor = BrandGreen
-                                )
-                            )
-                        }
+                    TextButton(onClick = { photoLauncher.launch("image/*") }) {
+                        Icon(Icons.Outlined.CameraAlt, null, modifier = Modifier.size(16.dp), tint = DarkForestGreen)
+                        Spacer(Modifier.width(6.dp))
+                        Text("Cambiar Foto de Perfil", fontWeight = FontWeight.Bold, color = DarkForestGreen)
                     }
-
-                    Spacer(Modifier.height(24.dp))
-
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(24.dp),
-                        color = CardWhite,
-                        shadowElevation = 2.dp
-                    ) {
-                        Column(modifier = Modifier.padding(20.dp)) {
-                            Text("Configuración de Jugador", fontWeight = FontWeight.Bold, color = BrandGreenDeep)
-                            Spacer(Modifier.height(16.dp))
-
-                            Text("Posición Principal", style = MaterialTheme.typography.labelMedium)
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                listOf("POR", "DEF", "MED", "DEL").forEach { pos ->
-                                    FilterChip(
-                                        selected = posicion == pos,
-                                        onClick = { posicion = pos },
-                                        label = { Text(pos) },
-                                        modifier = Modifier.weight(1f),
-                                        colors = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = BrandGreen,
-                                            selectedLabelColor = TextPrimary
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer(Modifier.height(40.dp))
-
-                    Button(
-                        onClick = { 
-                            if (token != null) {
-                                viewModel.updateProfile(context, token, nombre, telefono, posicion, selectedImageUri)
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                        enabled = updateState !is UpdateState.Loading && token != null,
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = BrandGreen)
-                    ) {
-                        if (updateState is UpdateState.Loading) {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = TextPrimary)
-                        } else {
-                            Text("GUARDAR CAMBIOS", fontWeight = FontWeight.Bold, color = TextPrimary)
-                        }
-                    }
-                    
-                    Spacer(Modifier.height(100.dp))
                 }
+            }
+
+            // Nombre completo
+            Column {
+                Text(
+                    "NOMBRE COMPLETO",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 11.sp,
+                    color = TextPrimary,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+                OutlinedTextField(
+                    value = nombre,
+                    onValueChange = { nombre = it },
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth().testTag("edit_name_input"),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = DarkForestGreen,
+                        unfocusedBorderColor = BorderGray,
+                        focusedContainerColor = CardWhite,
+                        unfocusedContainerColor = CardWhite
+                    )
+                )
+            }
+
+            // Posición preferida
+            Column {
+                Text(
+                    "POSICIÓN PRINCIPAL EN CANCHA",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 11.sp,
+                    color = TextPrimary,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    positionOptions.forEach { pos ->
+                        val isSelected = posicion.contains(pos.substringBefore(" ")) || posicion == pos
+                        Surface(
+                            onClick = { posicion = pos.substringBefore(" ") },
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (isSelected) Color(0xFFF0FDF4) else CardWhite,
+                            border = BorderStroke(1.5.dp, if (isSelected) DarkForestGreen else BorderGray),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = isSelected,
+                                    onClick = { posicion = pos.substringBefore(" ") },
+                                    colors = RadioButtonDefaults.colors(selectedColor = DarkForestGreen)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(pos, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Dorsal preferido & Teléfono
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "DORSAL (#)",
+                        fontWeight = FontWeight.Black,
+                        fontSize = 11.sp,
+                        color = TextPrimary,
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    )
+                    OutlinedTextField(
+                        value = dorsal,
+                        onValueChange = { dorsal = it },
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = DarkForestGreen,
+                            unfocusedBorderColor = BorderGray,
+                            focusedContainerColor = CardWhite,
+                            unfocusedContainerColor = CardWhite
+                        )
+                    )
+                }
+
+                Column(modifier = Modifier.weight(2f)) {
+                    Text(
+                        "TELÉFONO DE CONTACTO",
+                        fontWeight = FontWeight.Black,
+                        fontSize = 11.sp,
+                        color = TextPrimary,
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    )
+                    OutlinedTextField(
+                        value = telefono,
+                        onValueChange = { telefono = it },
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = DarkForestGreen,
+                            unfocusedBorderColor = BorderGray,
+                            focusedContainerColor = CardWhite,
+                            unfocusedContainerColor = CardWhite
+                        )
+                    )
+                }
+            }
+
+            // Ubicación / Zona
+            Column {
+                Text(
+                    "ZONA O CIUDAD PREDILECTA",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 11.sp,
+                    color = TextPrimary,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+                OutlinedTextField(
+                    value = ciudad,
+                    onValueChange = { ciudad = it },
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    leadingIcon = { Icon(Icons.Outlined.Place, null, tint = DarkForestGreen) },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = DarkForestGreen,
+                        unfocusedBorderColor = BorderGray,
+                        focusedContainerColor = CardWhite,
+                        unfocusedContainerColor = CardWhite
+                    )
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // Botón Guardar Cambios
+            Button(
+                onClick = {
+                    sessionManager.saveUserName(nombre)
+                    sessionManager.savePreferredPosition(posicion)
+                    Toast.makeText(context, "¡Perfil actualizado con éxito!", Toast.LENGTH_SHORT).show()
+                    navController.popBackStack()
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = LimeNeon, contentColor = DarkForestGreen),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp)
+                    .testTag("save_profile_button")
+            ) {
+                Text("Guardar Cambios", fontWeight = FontWeight.Black, fontSize = 16.sp)
             }
         }
     }

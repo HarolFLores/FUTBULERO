@@ -1,0 +1,8 @@
+{
+  "name": "ChocoFulbo",
+  "description": "Organiza tus partidos, equipos y estadísticas en Chiclayo",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

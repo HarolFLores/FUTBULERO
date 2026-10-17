@@ -24,6 +24,12 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object MyTeam : Screen("my_team", "Mis Equipos", Icons.Outlined.Groups)
     object CreateTeam : Screen("create_team", "Crear Equipo", Icons.Outlined.GroupAdd)
     object TeamDetail : Screen("team_detail/{teamId}", "Detalle Equipo", Icons.Outlined.Info)
+
+    // ChocoFulbo Match Screens
+    object SearchMatch : Screen("search_match", "Buscar Partido", Icons.Outlined.Search)
+    object CreateMatch : Screen("create_match", "Crear Partido", Icons.Outlined.Add)
+    object MatchDetail : Screen("match_detail/{matchId}", "Detalles del Partido", Icons.Outlined.SportsSoccer)
+    object LiveMatch : Screen("live_match/{matchId}", "Marcador en Vivo", Icons.Outlined.SportsSoccer)
 }
 
 val bottomBarScreens = listOf(

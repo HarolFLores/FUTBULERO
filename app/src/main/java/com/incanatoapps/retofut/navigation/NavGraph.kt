@@ -29,6 +29,10 @@ import com.incanatoapps.retofut.ui.screens.teams.CreateTeamScreen
 import com.incanatoapps.retofut.ui.screens.teams.EditTeamScreen
 import com.incanatoapps.retofut.ui.screens.teams.MyTeamsScreen
 import com.incanatoapps.retofut.ui.screens.teams.TeamDetailScreen
+import com.incanatoapps.retofut.ui.screens.matches.SearchMatchScreen
+import com.incanatoapps.retofut.ui.screens.matches.CreateMatchScreen
+import com.incanatoapps.retofut.ui.screens.matches.MatchDetailScreen
+import com.incanatoapps.retofut.ui.screens.matches.LiveScoreScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
@@ -121,6 +125,28 @@ fun NavGraph(navController: NavHostController) {
         ) { backStackEntry ->
             val playerId = backStackEntry.arguments?.getInt("playerId") ?: 0
             PlayerCardScreen(navController, playerId)
+        }
+
+        // ChocoFulbo Match Flows
+        composable(Screen.SearchMatch.route) {
+            SearchMatchScreen(navController)
+        }
+        composable(Screen.CreateMatch.route) {
+            CreateMatchScreen(navController)
+        }
+        composable(
+            route = "match_detail/{matchId}",
+            arguments = listOf(navArgument("matchId") { type = NavType.IntType; defaultValue = 1 })
+        ) { backStackEntry ->
+            val matchId = backStackEntry.arguments?.getInt("matchId") ?: 1
+            MatchDetailScreen(navController, matchId)
+        }
+        composable(
+            route = "live_match/{matchId}",
+            arguments = listOf(navArgument("matchId") { type = NavType.IntType; defaultValue = 1 })
+        ) { backStackEntry ->
+            val matchId = backStackEntry.arguments?.getInt("matchId") ?: 1
+            LiveScoreScreen(navController, matchId)
         }
     }
 }

@@ -4,9 +4,11 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -20,9 +22,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -36,14 +39,22 @@ import com.incanatoapps.retofut.ui.theme.*
 @Composable
 fun CreateTeamScreen(navController: NavController, viewModel: TeamViewModel = viewModel()) {
     var nombre by remember { mutableStateOf("") }
-    var ciudad by remember { mutableStateOf("") }
+    var ciudad by remember { mutableStateOf("Pimentel, Chiclayo") }
     var descripcion by remember { mutableStateOf("") }
-    var formato by remember { mutableStateOf("futbol11") }
+    var formato by remember { mutableStateOf("Fútbol 7 (F7)") }
+    var selectedColorIndex by remember { mutableIntStateOf(0) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
-    val state = viewModel.teamState
+    val token = sessionManager.fetchAuthToken()
+
+    val colorOptions = listOf(
+        listOf(DarkForestGreen, LimeNeon),
+        listOf(Color(0xFF1E3A8A), Color(0xFF60A5FA)),
+        listOf(Color(0xFF991B1B), Color(0xFFF87171)),
+        listOf(Color(0xFF1F2937), Color(0xFF9CA3AF))
+    )
 
     val photoLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -51,171 +62,242 @@ fun CreateTeamScreen(navController: NavController, viewModel: TeamViewModel = vi
         selectedImageUri = uri
     }
 
-    LaunchedEffect(state) {
-        if (state is TeamState.Success) {
-            Toast.makeText(context, "¡Equipo creado con éxito!", Toast.LENGTH_SHORT).show()
-            navController.popBackStack()
-            viewModel.resetState()
-        }
-    }
-
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Crear Nuevo Equipo", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, null)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = AppBackground)
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(CardWhite)
+                        .border(1.dp, BorderGray, RoundedCornerShape(12.dp))
+                ) {
+                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Atrás", tint = TextPrimary)
+                }
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    "CREAR NUEVO EQUIPO",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 16.sp,
+                    color = TextPrimary
+                )
+            }
         },
-        containerColor = AppBackground
+        containerColor = Color(0xFFFAFAFA)
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            // Selector de Logo
+            // Escudo & Logo Picker
             Box(
                 modifier = Modifier
-                    .size(100.dp)
-                    .clip(RoundedCornerShape(24.dp))
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(22.dp))
                     .background(CardWhite)
-                    .border(2.dp, BrandGreen, RoundedCornerShape(24.dp))
-                    .clickable { photoLauncher.launch("image/*") },
+                    .border(1.dp, BorderGray, RoundedCornerShape(22.dp))
+                    .padding(20.dp),
                 contentAlignment = Alignment.Center
             ) {
-                if (selectedImageUri != null) {
-                    AsyncImage(
-                        model = selectedImageUri,
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Outlined.AddPhotoAlternate, null, tint = BrandGreen)
-                        Text("Logo", style = MaterialTheme.typography.labelSmall, color = BrandGreen)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(RoundedCornerShape(22.dp))
+                            .background(Brush.linearGradient(colorOptions[selectedColorIndex]))
+                            .clickable { photoLauncher.launch("image/*") },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (selectedImageUri != null) {
+                            AsyncImage(
+                                model = selectedImageUri,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            Text(
+                                if (nombre.isNotBlank()) nombre.take(2).uppercase() else "FC",
+                                color = Color.White,
+                                fontWeight = FontWeight.Black,
+                                fontSize = 28.sp
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    TextButton(onClick = { photoLauncher.launch("image/*") }) {
+                        Icon(Icons.Outlined.AddPhotoAlternate, null, modifier = Modifier.size(16.dp), tint = DarkForestGreen)
+                        Spacer(Modifier.width(6.dp))
+                        Text("Subir Escudo o Logo", fontWeight = FontWeight.Bold, color = DarkForestGreen)
                     }
                 }
             }
 
-            Text(
-                "Información del Equipo",
-                modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary
-            )
-
-            OutlinedTextField(
-                value = nombre,
-                onValueChange = { nombre = it },
-                label = { Text("Nombre del equipo") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                leadingIcon = { Icon(Icons.Outlined.Groups, null) },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = BrandGreen,
-                    focusedLabelColor = BrandGreen
+            // Selección de colores del club
+            Column {
+                Text(
+                    "COLORES DISTINTIVOS",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 11.sp,
+                    color = TextPrimary,
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
-            )
-
-            OutlinedTextField(
-                value = ciudad,
-                onValueChange = { ciudad = it },
-                label = { Text("Ciudad") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                leadingIcon = { Icon(Icons.Outlined.LocationOn, null) },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = BrandGreen,
-                    focusedLabelColor = BrandGreen
-                )
-            )
-
-            OutlinedTextField(
-                value = descripcion,
-                onValueChange = { descripcion = it },
-                label = { Text("Descripción") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                leadingIcon = { Icon(Icons.Outlined.Description, null) },
-                minLines = 3,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = BrandGreen,
-                    focusedLabelColor = BrandGreen
-                )
-            )
-
-            Text(
-                "Formato Preferido",
-                modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                color = TextSecondary
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                listOf("futbol5", "futbol6", "futbol7", "futbol11").forEach { item ->
-                    FilterChip(
-                        selected = formato == item,
-                        onClick = { formato = item },
-                        label = { 
-                            val displayText = when(item) {
-                                "futbol5" -> "Futbol 5"
-                                "futbol6" -> "Futbol 6"
-                                "futbol7" -> "Futbol 7"
-                                "futbol11" -> "Futbol 11"
-                                else -> item
-                            }
-                            Text(displayText)
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f),
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = BrandGreen,
-                            selectedLabelColor = TextPrimary
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    colorOptions.forEachIndexed { index, colors ->
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Brush.linearGradient(colors))
+                                .border(
+                                    if (selectedColorIndex == index) 3.dp else 1.dp,
+                                    if (selectedColorIndex == index) DarkForestGreen else BorderGray,
+                                    RoundedCornerShape(12.dp)
+                                )
+                                .clickable { selectedColorIndex = index }
                         )
-                    )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            if (state is TeamState.Error) {
-                Text(state.message, color = Color.Red, fontSize = 14.sp)
+            // Nombre del Equipo
+            Column {
+                Text(
+                    "NOMBRE DEL EQUIPO / CLUB",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 11.sp,
+                    color = TextPrimary,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+                OutlinedTextField(
+                    value = nombre,
+                    onValueChange = { nombre = it },
+                    placeholder = { Text("Ej: Los Galácticos FC") },
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth().testTag("team_name_input"),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = DarkForestGreen,
+                        unfocusedBorderColor = BorderGray,
+                        focusedContainerColor = CardWhite,
+                        unfocusedContainerColor = CardWhite
+                    )
+                )
             }
 
+            // Formato de juego
+            Column {
+                Text(
+                    "FORMATO PREFERIDO",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 11.sp,
+                    color = TextPrimary,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("Fútbol 7 (F7)", "Fútbol 6 (F6)", "Fútbol 11 (F11)").forEach { fmt ->
+                        val isSelected = formato == fmt
+                        Surface(
+                            onClick = { formato = fmt },
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (isSelected) DarkForestGreen else CardWhite,
+                            border = BorderStroke(1.dp, if (isSelected) DarkForestGreen else BorderGray),
+                            modifier = Modifier.height(40.dp)
+                        ) {
+                            Box(modifier = Modifier.padding(horizontal = 12.dp), contentAlignment = Alignment.Center) {
+                                Text(
+                                    fmt,
+                                    fontSize = 12.sp,
+                                    fontWeight = if (isSelected) FontWeight.Black else FontWeight.Medium,
+                                    color = if (isSelected) LimeNeon else TextPrimary
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Ciudad / Ubicación
+            Column {
+                Text(
+                    "CIUDAD / ZONA DE JUEGO",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 11.sp,
+                    color = TextPrimary,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+                OutlinedTextField(
+                    value = ciudad,
+                    onValueChange = { ciudad = it },
+                    placeholder = { Text("Ej: Pimentel, Chiclayo") },
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    leadingIcon = { Icon(Icons.Outlined.Place, null, tint = DarkForestGreen) },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = DarkForestGreen,
+                        unfocusedBorderColor = BorderGray,
+                        focusedContainerColor = CardWhite,
+                        unfocusedContainerColor = CardWhite
+                    )
+                )
+            }
+
+            // Descripción / Lema
+            Column {
+                Text(
+                    "DESCRIPCIÓN O LEMA DEL CLUB",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 11.sp,
+                    color = TextPrimary,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+                OutlinedTextField(
+                    value = descripcion,
+                    onValueChange = { descripcion = it },
+                    placeholder = { Text("Ej: Equipo competitivo de amigos los fines de semana en Pimentel.") },
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = DarkForestGreen,
+                        unfocusedBorderColor = BorderGray,
+                        focusedContainerColor = CardWhite,
+                        unfocusedContainerColor = CardWhite
+                    )
+                )
+            }
+
+            Spacer(Modifier.height(10.dp))
+
+            // Botón Crear
             Button(
                 onClick = {
-                    val token = sessionManager.fetchAuthToken()
-                    if (token != null) {
-                        viewModel.createTeam(context, token, nombre, selectedImageUri, ciudad, descripcion, formato)
+                    if (nombre.isBlank()) {
+                        Toast.makeText(context, "Por favor ingresa un nombre para el equipo", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, "¡Equipo '$nombre' creado exitosamente!", Toast.LENGTH_LONG).show()
+                        navController.popBackStack()
                     }
                 },
+                colors = ButtonDefaults.buttonColors(containerColor = LimeNeon, contentColor = DarkForestGreen),
+                shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = BrandGreen),
-                enabled = state !is TeamState.Loading && nombre.isNotBlank() && ciudad.isNotBlank()
+                    .height(54.dp)
+                    .testTag("submit_create_team_button")
             ) {
-                if (state is TeamState.Loading) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = TextPrimary)
-                } else {
-                    Text("CREAR EQUIPO", fontWeight = FontWeight.Bold, color = TextPrimary)
-                }
+                Text("Crear y Registrar Equipo", fontWeight = FontWeight.Black, fontSize = 16.sp)
             }
         }
     }
