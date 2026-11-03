@@ -96,6 +96,12 @@ fun DashboardScreen(navController: NavHostController, viewModel: DashboardViewMo
         return
     }
 
+    // Portal exclusivo para Modo Invitado (Solo Lectura con Partidos, Torneos y Restricciones)
+    if (isGuest) {
+        com.incanatoapps.retofut.ui.screens.guest.GuestModeDashboard(navController = navController)
+        return
+    }
+
     val sampleMatches = remember {
         listOf(
             AvailableMatch(
