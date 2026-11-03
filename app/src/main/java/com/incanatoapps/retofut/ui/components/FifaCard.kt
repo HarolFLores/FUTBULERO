@@ -4,12 +4,14 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.SportsSoccer
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,9 +35,14 @@ import com.incanatoapps.retofut.R
 import com.incanatoapps.retofut.data.SessionManager
 import com.incanatoapps.retofut.data.network.RetrofitClient
 import com.incanatoapps.retofut.data.network.model.PlayerCardResponse
+import com.incanatoapps.retofut.ui.theme.LimeNeon
 
 @Composable
-fun FifaCard(card: PlayerCardResponse, modifier: Modifier = Modifier) {
+fun FifaCard(
+    card: PlayerCardResponse,
+    modifier: Modifier = Modifier,
+    onShareClick: (() -> Unit)? = null
+) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
     val token = remember { sessionManager.fetchAuthToken() }
@@ -159,18 +166,34 @@ fun FifaCard(card: PlayerCardResponse, modifier: Modifier = Modifier) {
                         .border(2.dp, borderColor.copy(alpha = 0.4f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(card.foto)
-                            .crossfade(true)
-                            .build(),
-                        imageLoader = imageLoader, // Usamos el loader con token
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize().scale(1.2f),
-                        contentScale = ContentScale.Crop,
-                        placeholder = painterResource(id = R.drawable.ic_launcher_foreground),
-                        error = painterResource(id = R.drawable.ic_launcher_foreground)
-                    )
+                    if (!card.foto.isNullOrBlank()) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(card.foto)
+                                .crossfade(true)
+                                .build(),
+                            imageLoader = imageLoader,
+                            contentDescription = card.nombre,
+                            modifier = Modifier.fillMaxSize().scale(1.2f),
+                            contentScale = ContentScale.Crop,
+                            placeholder = painterResource(id = R.drawable.ic_launcher_fg),
+                            error = painterResource(id = R.drawable.ic_launcher_fg)
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Brush.radialGradient(listOf(Color.White.copy(alpha = 0.35f), Color.Transparent))),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.SportsSoccer,
+                                contentDescription = null,
+                                tint = borderColor,
+                                modifier = Modifier.size(64.dp)
+                            )
+                        }
+                    }
                 }
             }
 
@@ -178,7 +201,7 @@ fun FifaCard(card: PlayerCardResponse, modifier: Modifier = Modifier) {
             
             // Nombre Estilizado
             Text(
-                text = (card.nombre.split(" ").firstOrNull() ?: "PRO PLAYER").uppercase(),
+                text = (card.nombre.ifBlank { "PRO PLAYER" }.split(" ").firstOrNull() ?: "PRO PLAYER").uppercase(),
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Black,
                 color = borderColor,
@@ -226,6 +249,27 @@ fun FifaCard(card: PlayerCardResponse, modifier: Modifier = Modifier) {
                     StatFooterItem("GOLES", card.performance.goles, borderColor)
                     StatFooterItem("ASIST.", card.performance.asistencias, borderColor)
                 }
+            }
+        }
+
+        // Botón Compartir Carta flotante en la esquina superior
+        if (onShareClick != null) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 16.dp, end = 16.dp)
+                    .size(34.dp)
+                    .clip(CircleShape)
+                    .background(borderColor)
+                    .clickable { onShareClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Share,
+                    contentDescription = "Compartir Carta",
+                    tint = if (isGold) LimeNeon else Color.White,
+                    modifier = Modifier.size(16.dp)
+                )
             }
         }
     }

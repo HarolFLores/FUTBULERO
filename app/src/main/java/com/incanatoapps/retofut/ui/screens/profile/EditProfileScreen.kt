@@ -287,14 +287,14 @@ fun EditProfileScreen(navController: NavHostController, viewModel: ProfileViewMo
                     Toast.makeText(context, "¡Perfil actualizado con éxito!", Toast.LENGTH_SHORT).show()
                     navController.popBackStack()
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = LimeNeon, contentColor = DarkForestGreen),
+                colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = Color.White),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp)
                     .testTag("save_profile_button")
             ) {
-                Text("Guardar Cambios", fontWeight = FontWeight.Black, fontSize = 16.sp)
+                Text("Guardar Cambios", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.White)
             }
         }
     }

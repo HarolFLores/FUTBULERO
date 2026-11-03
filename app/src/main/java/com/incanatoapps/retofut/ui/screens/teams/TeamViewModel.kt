@@ -27,6 +27,7 @@ sealed class TeamState {
 }
 
 sealed class TeamsListState {
+    object Idle : TeamsListState()
     object Loading : TeamsListState()
     data class Success(val teams: List<Team>) : TeamsListState()
     data class Error(val message: String) : TeamsListState()
@@ -39,12 +40,18 @@ sealed class SearchPlayersState {
     data class Error(val message: String) : SearchPlayersState()
 }
 
+/**
+ * TeamViewModel optimizado con carga diferida (Lazy / On-Demand):
+ * - Sin peticiones HTTP en bloque init {}.
+ * - Estado inicial en Idle.
+ * - Validación de caché en memoria para no repetir llamadas si los datos ya fueron recuperados.
+ */
 class TeamViewModel : ViewModel() {
 
     var teamState by mutableStateOf<TeamState>(TeamState.Idle)
         private set
 
-    var teamsListState by mutableStateOf<TeamsListState>(TeamsListState.Loading)
+    var teamsListState by mutableStateOf<TeamsListState>(TeamsListState.Idle)
         private set
 
     var teamDetailState by mutableStateOf<TeamState>(TeamState.Idle)
@@ -53,6 +60,8 @@ class TeamViewModel : ViewModel() {
     var searchPlayersState by mutableStateOf<SearchPlayersState>(SearchPlayersState.Idle)
         private set
 
+    private var lastLoadedTeamId: Int? = null
+
     private fun getFullImageUrl(path: String?): String? {
         if (path.isNullOrEmpty()) return null
         if (path.startsWith("http")) return path.replace("http://", "https://")
@@ -60,7 +69,13 @@ class TeamViewModel : ViewModel() {
         return "${RetrofitClient.BASE_URL}media?path=$cleanPath"
     }
 
-    fun loadMyTeams(token: String) {
+    /**
+     * Carga de equipos bajo demanda. Evita saturar el hilo principal y la red si ya se cargó.
+     */
+    fun loadMyTeams(token: String, forceReload: Boolean = false) {
+        if (!forceReload && teamsListState is TeamsListState.Success) {
+            return
+        }
         viewModelScope.launch {
             teamsListState = TeamsListState.Loading
             try {
@@ -79,9 +94,16 @@ class TeamViewModel : ViewModel() {
         }
     }
 
-    fun loadTeamDetails(token: String, id: Int) {
+    /**
+     * Carga del detalle de equipo solo para el ID seleccionado.
+     */
+    fun loadTeamDetails(token: String, id: Int, forceReload: Boolean = false) {
+        if (!forceReload && teamDetailState is TeamState.Success && lastLoadedTeamId == id) {
+            return
+        }
         viewModelScope.launch {
             teamDetailState = TeamState.Loading
+            lastLoadedTeamId = id
             try {
                 val bearerToken = if (token.startsWith("Bearer ")) token else "Bearer $token"
                 val response = RetrofitClient.authService.getTeam(bearerToken, id)
@@ -122,6 +144,7 @@ class TeamViewModel : ViewModel() {
                 if (response.isSuccessful && body != null && body.success) {
                     val team = body.data!!.copy(logo = getFullImageUrl(body.data.logo))
                     teamState = TeamState.Success(team)
+                    loadMyTeams(token, forceReload = true)
                 } else {
                     teamState = TeamState.Error(body?.message ?: "Error al crear el equipo")
                 }
@@ -151,7 +174,7 @@ class TeamViewModel : ViewModel() {
                 if (response.isSuccessful && body != null && body.success) {
                     val team = body.data!!.copy(logo = getFullImageUrl(body.data.logo))
                     teamState = TeamState.Success(team)
-                    loadTeamDetails(token, id)
+                    loadTeamDetails(token, id, forceReload = true)
                 } else {
                     teamState = TeamState.Error(body?.message ?: "Error al actualizar equipo")
                 }
@@ -166,7 +189,10 @@ class TeamViewModel : ViewModel() {
             try {
                 val bearerToken = if (token.startsWith("Bearer ")) token else "Bearer $token"
                 val response = RetrofitClient.authService.deleteTeam(bearerToken, id)
-                if (response.isSuccessful) onSuccess()
+                if (response.isSuccessful) {
+                    onSuccess()
+                    loadMyTeams(token, forceReload = true)
+                }
             } catch (e: Exception) {}
         }
     }
@@ -178,7 +204,7 @@ class TeamViewModel : ViewModel() {
                 val response = RetrofitClient.authService.removeTeamMember(bearerToken, teamId, userId)
                 if (response.isSuccessful && response.body()?.success == true) {
                     onSuccess()
-                    loadTeamDetails(token, teamId)
+                    loadTeamDetails(token, teamId, forceReload = true)
                 }
             } catch (e: Exception) {}
         }
@@ -210,7 +236,7 @@ class TeamViewModel : ViewModel() {
                 val response = RetrofitClient.authService.invitePlayer(bearerToken, teamId, InvitePlayerRequest(userId))
                 if (response.isSuccessful && response.body()?.success == true) {
                     onInviteSent()
-                    loadTeamDetails(token, teamId)
+                    loadTeamDetails(token, teamId, forceReload = true)
                 }
             } catch (e: Exception) {}
         }
@@ -223,7 +249,7 @@ class TeamViewModel : ViewModel() {
                 val response = RetrofitClient.authService.joinTeam(bearerToken, teamId)
                 if (response.isSuccessful && response.body()?.success == true) {
                     onJoined()
-                    loadMyTeams(token)
+                    loadMyTeams(token, forceReload = true)
                 }
             } catch (e: Exception) {}
         }
@@ -236,7 +262,7 @@ class TeamViewModel : ViewModel() {
                 val response = RetrofitClient.authService.transferCaptaincy(bearerToken, teamId, TransferCaptaincyRequest(newCaptainId))
                 if (response.isSuccessful && response.body()?.success == true) {
                     onSuccess()
-                    loadTeamDetails(token, teamId)
+                    loadTeamDetails(token, teamId, forceReload = true)
                 }
             } catch (e: Exception) {}
         }

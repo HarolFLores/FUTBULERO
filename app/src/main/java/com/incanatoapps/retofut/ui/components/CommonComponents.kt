@@ -3,6 +3,7 @@ package com.incanatoapps.retofut.ui.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import com.incanatoapps.retofut.ui.theme.ForestGreen
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,8 +52,12 @@ fun ChallengeCard() {
                 Text("Los Galácticos FC", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Text("Fútbol 7 - Hoy 8:00 PM", style = MaterialTheme.typography.bodySmall)
             }
-            Button(onClick = { /* TODO */ }, shape = RoundedCornerShape(8.dp)) {
-                Text("Aceptar")
+            Button(
+                onClick = { /* TODO */ },
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = Color.White)
+            ) {
+                Text("Aceptar", color = Color.White, fontWeight = FontWeight.Bold)
             }
         }
     }

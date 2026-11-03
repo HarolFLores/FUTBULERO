@@ -37,6 +37,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.incanatoapps.retofut.data.SessionManager
+import com.incanatoapps.retofut.data.network.model.UserRole
 import com.incanatoapps.retofut.navigation.Screen
 import com.incanatoapps.retofut.ui.theme.*
 
@@ -56,8 +57,10 @@ data class AvailableMatch(
 fun DashboardScreen(navController: NavHostController, viewModel: DashboardViewModel = viewModel()) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
+    val isGuest = remember { sessionManager.isGuest() }
+    val userRole = remember { sessionManager.fetchUserRole() }
     val token = remember { sessionManager.fetchAuthToken() }
-    val userName = remember { sessionManager.fetchUserName() ?: "Piero" }
+    val userName = remember { if (isGuest) "Invitado" else (sessionManager.fetchUserName() ?: "Piero") }
     val userPosition = remember { sessionManager.fetchPreferredPosition() }
 
     var searchQuery by remember { mutableStateOf("") }
@@ -67,9 +70,13 @@ fun DashboardScreen(navController: NavHostController, viewModel: DashboardViewMo
     var showNotificationsDialog by remember { mutableStateOf(false) }
     var joinedMatchIds by remember { mutableStateOf(setOf<Int>()) }
 
-    // Redirigir a login si no hay sesión
-    LaunchedEffect(token) {
-        if (token == null) {
+    var showGuestRestrictionDialog by remember { mutableStateOf(false) }
+    var guestRestrictionTitle by remember { mutableStateOf("Acción Restringida") }
+    var guestRestrictionMessage by remember { mutableStateOf("") }
+
+    // Redirigir a login solo si no hay sesión y tampoco está en modo invitado
+    LaunchedEffect(token, isGuest) {
+        if (token == null && !isGuest) {
             navController.navigate(Screen.Login.route) {
                 popUpTo(0) { inclusive = true }
             }
@@ -190,7 +197,7 @@ fun DashboardScreen(navController: NavHostController, viewModel: DashboardViewMo
                             .size(40.dp)
                             .clip(CircleShape)
                             .background(Color(0xFFF3F4F6))
-                            .clickable { showNotificationsDialog = true }
+                            .clickable { navController.navigate(Screen.Notifications.route) }
                             .testTag("notifications_button"),
                         contentAlignment = Alignment.Center
                     ) {
@@ -241,12 +248,58 @@ fun DashboardScreen(navController: NavHostController, viewModel: DashboardViewMo
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp, vertical = 4.dp)
                 ) {
-                    Text(
-                        text = "¡Hola, $userName! 👋",
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color(0xFF111827)
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "¡Hola, $userName! 👋",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFF111827)
+                        )
+
+                        // Badge del Rol de Usuario
+                        Surface(
+                            color = when (userRole) {
+                                UserRole.CAPITAN -> Color(0xFFFEF3C7)
+                                UserRole.ARBITRO -> Color(0xFFF3E8FF)
+                                UserRole.ADMIN_CANCHA -> Color(0xFFFEE2E2)
+                                UserRole.JUGADOR_CON_EQUIPO -> Color(0xFFDBEAFE)
+                                UserRole.JUGADOR_LIBRE -> Color(0xFFDCFCE7)
+                                UserRole.INVITADO -> Color(0xFFF3F4F6)
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(
+                                1.dp,
+                                when (userRole) {
+                                    UserRole.CAPITAN -> Color(0xFFF59E0B)
+                                    UserRole.ARBITRO -> Color(0xFF9333EA)
+                                    UserRole.ADMIN_CANCHA -> Color(0xFFEF4444)
+                                    UserRole.JUGADOR_CON_EQUIPO -> Color(0xFF3B82F6)
+                                    UserRole.JUGADOR_LIBRE -> Color(0xFF22C55E)
+                                    UserRole.INVITADO -> Color(0xFF9CA3AF)
+                                }
+                            )
+                        ) {
+                            Text(
+                                text = userRole.displayName.uppercase(),
+                                fontSize = 9.5.sp,
+                                fontWeight = FontWeight.Black,
+                                color = when (userRole) {
+                                    UserRole.CAPITAN -> Color(0xFF92400E)
+                                    UserRole.ARBITRO -> Color(0xFF6B21A8)
+                                    UserRole.ADMIN_CANCHA -> Color(0xFF991B1B)
+                                    UserRole.JUGADOR_CON_EQUIPO -> Color(0xFF1E40AF)
+                                    UserRole.JUGADOR_LIBRE -> Color(0xFF15803D)
+                                    UserRole.INVITADO -> Color(0xFF374151)
+                                },
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
+                        }
+                    }
+
                     Spacer(Modifier.height(2.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
@@ -262,6 +315,59 @@ fun DashboardScreen(navController: NavHostController, viewModel: DashboardViewMo
                             color = Color(0xFF6B7280),
                             fontWeight = FontWeight.Medium
                         )
+                    }
+                }
+            }
+
+            // Banner para Modo Invitado
+            if (isGuest) {
+                item {
+                    Surface(
+                        color = Color(0xFFEFF6FF),
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(1.2.dp, Color(0xFF93C5FD)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 6.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFDBEAFE)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Outlined.Visibility, null, tint = Color(0xFF1D4ED8), modifier = Modifier.size(20.dp))
+                            }
+                            Spacer(Modifier.width(10.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Modo Invitado (Solo Lectura)",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.5.sp,
+                                    color = Color(0xFF1E3A8A)
+                                )
+                                Text(
+                                    text = "Estás viendo pichangas en Chiclayo. Inicia sesión para crear partidos o unirte.",
+                                    fontSize = 11.5.sp,
+                                    color = Color(0xFF3B82F6),
+                                    lineHeight = 15.sp
+                                )
+                            }
+                            Spacer(Modifier.width(6.dp))
+                            Button(
+                                onClick = { navController.navigate(Screen.Login.route) },
+                                colors = ButtonDefaults.buttonColors(containerColor = DarkForestGreen, contentColor = Color.White),
+                                shape = RoundedCornerShape(10.dp),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                            ) {
+                                Text("Acceder", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                        }
                     }
                 }
             }
@@ -626,7 +732,15 @@ fun DashboardScreen(navController: NavHostController, viewModel: DashboardViewMo
                         containerBg = Color.White,
                         textColor = TextPrimary,
                         modifier = Modifier.weight(1f),
-                        onClick = { navController.navigate(Screen.MyTeam.route) }
+                        onClick = {
+                            if (isGuest) {
+                                guestRestrictionTitle = "Mis Equipos"
+                                guestRestrictionMessage = "Como Invitado puedes explorar la app. Para ver o administrar equipos necesitas iniciar sesión con tu cuenta."
+                                showGuestRestrictionDialog = true
+                            } else {
+                                navController.navigate(Screen.MyTeam.route)
+                            }
+                        }
                     )
 
                     // Crear partido
@@ -638,13 +752,137 @@ fun DashboardScreen(navController: NavHostController, viewModel: DashboardViewMo
                         containerBg = ForestGreen,
                         textColor = Color.White,
                         modifier = Modifier.weight(1f),
-                        onClick = { navController.navigate(Screen.CreateMatch.route) }
+                        onClick = {
+                            if (isGuest) {
+                                guestRestrictionTitle = "Crear Partido"
+                                guestRestrictionMessage = "Acción restringida: Para organizar y publicar un partido o pichanga debes tener una cuenta e iniciar sesión."
+                                showGuestRestrictionDialog = true
+                            } else {
+                                navController.navigate(Screen.CreateMatch.route)
+                            }
+                        }
                     )
                 }
             }
 
             item {
-                Spacer(Modifier.height(22.dp))
+                Spacer(Modifier.height(12.dp))
+            }
+
+            // --- 5.1 ACCESOS DESTACADOS: TORNEOS Y GESTIÓN DE CANCHAS ---
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    // Torneos y Copas
+                    Card(
+                        onClick = {
+                            navController.navigate(Screen.Tournaments.route)
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(84.dp)
+                            .testTag("tournaments_nav_card"),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF3C7)),
+                        border = BorderStroke(1.dp, Color(0xFFFDE68A))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFF59E0B)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Outlined.EmojiEvents,
+                                    contentDescription = "Torneos",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                            Spacer(Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = "Torneos",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = Color(0xFF92400E)
+                                )
+                                Text(
+                                    text = "Copas y Fixture",
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color(0xFFB45309)
+                                )
+                            }
+                        }
+                    }
+
+                    // Gestión Canchas
+                    Card(
+                        onClick = {
+                            navController.navigate(Screen.CourtManagement.route)
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(84.dp)
+                            .testTag("court_management_nav_card"),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
+                        border = BorderStroke(1.dp, Color(0xFFBFDBFE))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF2563EB)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Outlined.SportsSoccer,
+                                    contentDescription = "Canchas",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                            Spacer(Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = "Canchas",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = Color(0xFF1E40AF)
+                                )
+                                Text(
+                                    text = if (userRole == UserRole.ADMIN_CANCHA) "Mi Sede & Tarifas" else "Horarios & Tarifas",
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color(0xFF3B82F6)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                Spacer(Modifier.height(18.dp))
             }
 
             // --- 6. SECCIÓN: PARTIDOS DISPONIBLES ---
@@ -810,12 +1048,18 @@ fun DashboardScreen(navController: NavHostController, viewModel: DashboardViewMo
 
                                 Button(
                                     onClick = {
-                                        if (isJoined) {
-                                            joinedMatchIds = joinedMatchIds - match.id
-                                            Toast.makeText(context, "Cancelaste tu cupo", Toast.LENGTH_SHORT).show()
+                                        if (isGuest) {
+                                            guestRestrictionTitle = "Inscripción a Pichanga"
+                                            guestRestrictionMessage = "Acción restringida: Para inscribirte y reservar tu cupo en '${match.title}' debes iniciar sesión con una cuenta de jugador."
+                                            showGuestRestrictionDialog = true
                                         } else {
-                                            joinedMatchIds = joinedMatchIds + match.id
-                                            Toast.makeText(context, "¡Te uniste a ${match.title}!", Toast.LENGTH_SHORT).show()
+                                            if (isJoined) {
+                                                joinedMatchIds = joinedMatchIds - match.id
+                                                Toast.makeText(context, "Cancelaste tu cupo", Toast.LENGTH_SHORT).show()
+                                            } else {
+                                                joinedMatchIds = joinedMatchIds + match.id
+                                                Toast.makeText(context, "¡Te uniste a ${match.title}!", Toast.LENGTH_SHORT).show()
+                                            }
                                         }
                                     },
                                     shape = RoundedCornerShape(12.dp),
@@ -826,9 +1070,19 @@ fun DashboardScreen(navController: NavHostController, viewModel: DashboardViewMo
                                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(if (isJoined) "Inscrito" else "Unirme", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                        Text(
+                                            text = if (isJoined) "Inscrito" else "Unirme",
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
+                                        )
                                         Spacer(Modifier.width(4.dp))
-                                        Icon(Icons.Outlined.SportsSoccer, contentDescription = null, modifier = Modifier.size(14.dp))
+                                        Icon(
+                                            imageVector = Icons.Outlined.SportsSoccer,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(14.dp)
+                                        )
                                     }
                                 }
                             }
@@ -943,10 +1197,10 @@ fun DashboardScreen(navController: NavHostController, viewModel: DashboardViewMo
             confirmButton = {
                 Button(
                     onClick = { showMatchDetailsDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = ForestGreen),
+                    colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = Color.White),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Entendido")
+                    Text("Entendido", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             },
             shape = RoundedCornerShape(20.dp),
@@ -1001,10 +1255,10 @@ fun DashboardScreen(navController: NavHostController, viewModel: DashboardViewMo
                         Toast.makeText(context, "¡Pichanga creada y publicada con éxito!", Toast.LENGTH_SHORT).show()
                         showCreateMatchDialog = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = ForestGreen),
+                    colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = Color.White),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Publicar Partido")
+                    Text("Publicar Partido", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -1034,14 +1288,71 @@ fun DashboardScreen(navController: NavHostController, viewModel: DashboardViewMo
             confirmButton = {
                 Button(
                     onClick = { showNotificationsDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = ForestGreen),
+                    colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = Color.White),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Cerrar")
+                    Text("Cerrar", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             },
             shape = RoundedCornerShape(20.dp),
-            containerColor = CardWhite
+        )
+    }
+
+    // Modal Restricción Modo Invitado
+    if (showGuestRestrictionDialog) {
+        AlertDialog(
+            onDismissRequest = { showGuestRestrictionDialog = false },
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFFEF3C7)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Outlined.Lock,
+                        contentDescription = null,
+                        tint = Color(0xFFD97706),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    text = guestRestrictionTitle,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 18.sp,
+                    color = DarkForestGreen
+                )
+            },
+            text = {
+                Text(
+                    text = guestRestrictionMessage,
+                    fontSize = 13.5.sp,
+                    color = TextSecondary,
+                    textAlign = TextAlign.Center
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showGuestRestrictionDialog = false
+                        navController.navigate(Screen.Login.route)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = DarkForestGreen, contentColor = Color.White),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Iniciar Sesión", fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showGuestRestrictionDialog = false }) {
+                    Text("Seguir Explorando", color = TextSecondary)
+                }
+            },
+            shape = RoundedCornerShape(20.dp),
+            containerColor = Color.White
         )
     }
 
@@ -1068,10 +1379,10 @@ fun DashboardScreen(navController: NavHostController, viewModel: DashboardViewMo
                         Toast.makeText(context, "¡Te uniste a ${match.title}!", Toast.LENGTH_SHORT).show()
                         selectedMatchForJoin = null
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = ForestGreen),
+                    colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = Color.White),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Unirme Ahora")
+                    Text("Unirme Ahora", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -1169,12 +1480,12 @@ fun ChocoFulboBottomBar(navController: NavHostController) {
                 }
             )
 
-            // Tab 2: TORNEO
+            // Tab 2: TORNEO (Módulo de Torneos y Copas)
             BottomBarItem(
                 title = "TORNEO",
                 icon = Icons.Outlined.EmojiEvents,
-                isSelected = currentRoute == Screen.Rankings.route,
-                onClick = { navController.navigate(Screen.Rankings.route) }
+                isSelected = currentRoute == Screen.Tournaments.route || currentRoute == Screen.Rankings.route,
+                onClick = { navController.navigate(Screen.Tournaments.route) }
             )
 
             // Tab 3: EQUIPOS
@@ -1298,8 +1609,10 @@ fun ModernDrawerContent(navController: NavHostController, onClose: () -> Unit) {
 
             val drawerItems = listOf(
                 DrawerItemData(Icons.Outlined.Home, "Partidos", Screen.Home.route),
-                DrawerItemData(Icons.Outlined.EmojiEvents, "Torneo", Screen.Rankings.route),
+                DrawerItemData(Icons.Outlined.EmojiEvents, "Torneos y Copas", Screen.Tournaments.route),
+                DrawerItemData(Icons.Outlined.SportsSoccer, "Gestión Canchas", Screen.CourtManagement.route),
                 DrawerItemData(Icons.Outlined.Groups, "Mis Equipos", Screen.MyTeam.route),
+                DrawerItemData(Icons.Outlined.MilitaryTech, "Rankings", Screen.Rankings.route),
                 DrawerItemData(Icons.Outlined.Person, "Mi Perfil", Screen.Profile.route)
             )
 

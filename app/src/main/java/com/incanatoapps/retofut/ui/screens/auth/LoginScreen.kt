@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.incanatoapps.retofut.data.SessionManager
+import com.incanatoapps.retofut.data.network.model.UserRole
 import com.incanatoapps.retofut.navigation.Screen
 import com.incanatoapps.retofut.ui.theme.*
 
@@ -63,9 +64,17 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel = viewMod
 
     LaunchedEffect(authState) {
         if (authState is AuthState.Success) {
+            sessionManager.clearGuestSession()
             // Guardar token e ID de usuario y navegar inmediatamente
             authState.token?.let { sessionManager.saveAuthToken(it) }
             authState.userId?.let { sessionManager.saveUserId(it) }
+            val user = authState.user
+            if (user != null) {
+                sessionManager.saveUserName(user.nombre)
+                sessionManager.saveUserRole(user.getRole())
+            } else {
+                sessionManager.saveUserRole(UserRole.CAPITAN)
+            }
 
             navController.navigate(Screen.Home.route) {
                 popUpTo(Screen.Login.route) { inclusive = true }
@@ -149,8 +158,11 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel = viewMod
                                 textDecoration = TextDecoration.Underline,
                                 modifier = Modifier
                                     .clickable {
+                                        sessionManager.clearGuestSession()
                                         sessionManager.saveAuthToken("demo_token_chiclayo")
                                         sessionManager.saveUserId(1)
+                                        sessionManager.saveUserName("Piero")
+                                        sessionManager.saveUserRole(UserRole.CAPITAN)
                                         navController.navigate(Screen.Home.route) {
                                             popUpTo(Screen.Login.route) { inclusive = true }
                                         }
@@ -421,13 +433,10 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel = viewMod
 
             Spacer(Modifier.height(14.dp))
 
-            // Botón Especial: Ingresar como invitado (Modo Expo)
+            // Botón Especial: Ingresar como Invitado (Modo Exploración sin registro)
             OutlinedButton(
                 onClick = {
-                    sessionManager.saveAuthToken("expo_guest_token")
-                    sessionManager.saveUserId(1)
-                    sessionManager.saveUserName("Piero")
-                    sessionManager.savePreferredPosition("Delantero")
+                    sessionManager.setGuestSession()
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
@@ -451,11 +460,11 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel = viewMod
                         Icons.Outlined.SportsSoccer,
                         contentDescription = null,
                         tint = DarkForestGreen,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "Ingresar como invitado",
+                        text = "Ingresar como Invitado",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = DarkForestGreen,
@@ -463,6 +472,17 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel = viewMod
                     )
                 }
             }
+
+            Spacer(Modifier.height(6.dp))
+
+            Text(
+                text = "👀 Explora pichangas y canchas abiertas en Chiclayo sin registrarte",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary,
+                fontSize = 12.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Spacer(Modifier.height(30.dp))
 
@@ -535,7 +555,7 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel = viewMod
                 Button(
                     onClick = { showRulesDialog = false },
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = ForestGreen)
+                    colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = Color.White)
                 ) {
                     Text("Entendido", fontWeight = FontWeight.Bold, color = Color.White)
                 }

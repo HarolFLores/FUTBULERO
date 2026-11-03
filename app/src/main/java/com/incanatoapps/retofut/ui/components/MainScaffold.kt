@@ -18,12 +18,16 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.incanatoapps.retofut.ui.screens.dashboard.FloatingPremiumBottomNav
 import com.incanatoapps.retofut.ui.screens.dashboard.ModernDrawerContent
+import com.incanatoapps.retofut.navigation.Screen
 import com.incanatoapps.retofut.ui.theme.AppBackground
 import com.incanatoapps.retofut.ui.theme.BorderGray
 import com.incanatoapps.retofut.ui.theme.CardWhite
 import com.incanatoapps.retofut.ui.theme.TextPrimary
 import kotlinx.coroutines.launch
 
+// MainScaffold es un contenedor puramente estructural (stateless en datos de negocio).
+// No retiene ni inicializa ningún ViewModel, garantizando que cada pantalla hija (screen)
+// controle su propio ciclo de vida y ViewModel de forma diferida (lazy/on-demand).
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScaffold(
@@ -71,7 +75,7 @@ fun MainScaffold(
                     },
                     actions = {
                         IconButton(
-                            onClick = { },
+                            onClick = { navController.navigate(Screen.Notifications.route) },
                             modifier = Modifier
                                 .padding(end = 16.dp)
                                 .size(44.dp)

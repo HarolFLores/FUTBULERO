@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -25,9 +26,11 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.incanatoapps.retofut.navigation.Screen
 import com.incanatoapps.retofut.ui.screens.dashboard.ChocoFulboBottomBar
 import com.incanatoapps.retofut.ui.theme.*
 
@@ -533,18 +536,18 @@ fun LiveScoreScreen(navController: NavHostController, matchId: Int) {
                                             Toast.makeText(context, "Ya votaste por el MVP de este encuentro", Toast.LENGTH_SHORT).show()
                                         }
                                     },
-                                    colors = ButtonDefaults.buttonColors(containerColor = LimeNeon),
+                                    colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = Color.White),
                                     shape = RoundedCornerShape(12.dp),
                                     modifier = Modifier.weight(1f)
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(Icons.Outlined.ThumbUp, null, tint = DarkForestGreen, modifier = Modifier.size(16.dp))
+                                        Icon(Icons.Outlined.ThumbUp, null, tint = Color.White, modifier = Modifier.size(16.dp))
                                         Spacer(Modifier.width(6.dp))
                                         Text(
                                             text = if (hasVoted) "¡Ya Votaste!" else "Votar por MVP",
-                                            fontWeight = FontWeight.Black,
+                                            fontWeight = FontWeight.Bold,
                                             fontSize = 13.sp,
-                                            color = DarkForestGreen
+                                            color = Color.White
                                         )
                                     }
                                 }
@@ -564,6 +567,121 @@ fun LiveScoreScreen(navController: NavHostController, matchId: Int) {
                             }
                         }
                     }
+                }
+
+                // 5. IMPACTO EN LA TABLA
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { navController.navigate(Screen.Tournaments.route) },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F4F6)),
+                        border = BorderStroke(1.dp, BorderGray)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(DarkForestGreen),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Outlined.TableChart,
+                                    contentDescription = null,
+                                    tint = LimeNeon,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                            Spacer(Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Impacto en la Tabla",
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 14.sp,
+                                    color = TextPrimary
+                                )
+                                Text(
+                                    text = "Con este triunfo parcial, Chiclayo sube al 1° lugar.",
+                                    fontSize = 11.5.sp,
+                                    color = TextSecondary
+                                )
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(start = 6.dp)
+                            ) {
+                                Text(
+                                    text = "Ver\nTabla",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextPrimary,
+                                    textAlign = TextAlign.End,
+                                    lineHeight = 13.sp
+                                )
+                                Spacer(Modifier.width(4.dp))
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowForward,
+                                    contentDescription = null,
+                                    tint = TextPrimary,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
+
+                // 6. ACCIONES DEL PARTIDO: ACTA FINAL / CALIFICACIÓN Y QUINIELAS
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Button(
+                            onClick = { navController.navigate(Screen.PostMatchReview.createRoute(matchId)) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = DarkForestGreen,
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                                .testTag("btn_final_review")
+                        ) {
+                            Icon(Icons.Outlined.MilitaryTech, null, tint = LimeNeon, modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "Acta Final y Calificación (MVP, OVR 88, Árbitro)",
+                                fontSize = 12.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+
+                        OutlinedButton(
+                            onClick = { navController.navigate(Screen.BetsHub.route) },
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkForestGreen),
+                            border = BorderStroke(1.2.dp, ForestGreen),
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(46.dp)
+                                .testTag("btn_bets_hub")
+                        ) {
+                            Icon(Icons.Outlined.MonetizationOn, null, tint = ForestGreen, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "Ver Todas las Quinielas y Apuestas en Vivo",
+                                fontSize = 12.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = DarkForestGreen
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(16.dp))
                 }
             }
         }

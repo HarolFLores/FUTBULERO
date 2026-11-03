@@ -34,6 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.incanatoapps.retofut.data.SessionManager
+import com.incanatoapps.retofut.data.network.model.UserRole
 import com.incanatoapps.retofut.navigation.Screen
 import com.incanatoapps.retofut.ui.components.FifaCard
 import com.incanatoapps.retofut.ui.screens.dashboard.ChocoFulboBottomBar
@@ -44,9 +45,13 @@ import com.incanatoapps.retofut.ui.theme.*
 fun ProfileScreen(navController: NavHostController, viewModel: ProfileViewModel = viewModel()) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
+    val isGuest = remember { sessionManager.isGuest() }
+    var userRole by remember { mutableStateOf(sessionManager.fetchUserRole()) }
     val token = remember { sessionManager.fetchAuthToken() }
-    val userName = remember { sessionManager.fetchUserName() ?: "Piero Flores" }
-    val userPosition = remember { sessionManager.fetchPreferredPosition() }
+    val userName = remember { if (isGuest) "Invitado" else (sessionManager.fetchUserName() ?: "Piero Flores") }
+    var userPosition by remember { mutableStateOf(sessionManager.fetchPreferredPosition()) }
+    var showPositionSelectionDialog by remember { mutableStateOf(false) }
+    var pendingPositionForRoleSwitch by remember { mutableStateOf(userPosition) }
 
     BackHandler {
         navController.navigate(Screen.Home.route) {
@@ -54,14 +59,127 @@ fun ProfileScreen(navController: NavHostController, viewModel: ProfileViewModel 
         }
     }
 
-    LaunchedEffect(token) {
-        if (token != null && token != "expo_guest_token") {
+    // Carga bajo demanda al ingresar a la pantalla de perfil
+    LaunchedEffect(Unit) {
+        if (token != null && token != "expo_guest_token" && !isGuest) {
             viewModel.loadProfile(token)
         }
     }
 
     var showLogoutDialog by remember { mutableStateOf(false) }
     var notificationsEnabled by remember { mutableStateOf(true) }
+
+    // Dialog para que el Árbitro configure su Posición de Juego al pasar a Modo Jugador
+    if (showPositionSelectionDialog) {
+        Dialog(onDismissRequest = { showPositionSelectionDialog = false }) {
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = CardWhite,
+                modifier = Modifier.fillMaxWidth().padding(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(22.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(54.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFDCFCE7)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("⚽", fontSize = 26.sp)
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        "¡Modo Jugador para Árbitros!",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Black,
+                        color = DarkForestGreen,
+                        fontSize = 19.sp,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Como árbitro colegiado, también puedes vestirte de corto y jugar pichangas. Elige tu posición en el campo:",
+                        fontSize = 12.sp,
+                        color = TextSecondary,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(Modifier.height(16.dp))
+
+                    val positions = listOf("Delantero", "Mediocampista", "Defensa", "Arquero")
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        positions.chunked(2).forEach { rowPositions ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                rowPositions.forEach { pos ->
+                                    val isSelected = pendingPositionForRoleSwitch == pos
+                                    Surface(
+                                        onClick = { pendingPositionForRoleSwitch = pos },
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = if (isSelected) DarkForestGreen else Color(0xFFF3F4F6),
+                                        border = BorderStroke(1.dp, if (isSelected) LimeNeon else BorderGray),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(
+                                            text = pos,
+                                            fontSize = 12.sp,
+                                            fontWeight = if (isSelected) FontWeight.Black else FontWeight.Medium,
+                                            color = if (isSelected) LimeNeon else TextPrimary,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.padding(vertical = 12.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(20.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { showPositionSelectionDialog = false },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("Cancelar")
+                        }
+
+                        Button(
+                            onClick = {
+                                userPosition = pendingPositionForRoleSwitch
+                                sessionManager.savePreferredPosition(pendingPositionForRoleSwitch)
+                                userRole = UserRole.JUGADOR_LIBRE
+                                sessionManager.saveUserRole(UserRole.JUGADOR_LIBRE)
+                                showPositionSelectionDialog = false
+                                Toast.makeText(
+                                    context,
+                                    "¡Modo Jugador activado! Tu posición es: $pendingPositionForRoleSwitch ⚽",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = ForestGreen,
+                                contentColor = Color.White
+                            ),
+                            modifier = Modifier.weight(1.3f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("A la Cancha ⚽", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     if (showLogoutDialog) {
         AlertDialog(
@@ -154,6 +272,59 @@ fun ProfileScreen(navController: NavHostController, viewModel: ProfileViewModel 
                 }
             }
 
+            // Banner Modo Invitado en Perfil
+            if (isGuest) {
+                item {
+                    Surface(
+                        color = Color(0xFFEFF6FF),
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(1.2.dp, Color(0xFF93C5FD)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 6.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFDBEAFE)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Outlined.Visibility, null, tint = Color(0xFF1D4ED8), modifier = Modifier.size(20.dp))
+                            }
+                            Spacer(Modifier.width(10.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Estás en Modo Invitado",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.5.sp,
+                                    color = Color(0xFF1E3A8A)
+                                )
+                                Text(
+                                    text = "Inicia sesión para tener tu ficha oficial, estadísticas guardadas y crear equipos.",
+                                    fontSize = 11.5.sp,
+                                    color = Color(0xFF3B82F6),
+                                    lineHeight = 15.sp
+                                )
+                            }
+                            Spacer(Modifier.width(6.dp))
+                            Button(
+                                onClick = { navController.navigate(Screen.Login.route) },
+                                colors = ButtonDefaults.buttonColors(containerColor = DarkForestGreen, contentColor = Color.White),
+                                shape = RoundedCornerShape(10.dp),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                            ) {
+                                Text("Acceder", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                        }
+                    }
+                }
+            }
+
             // --- HERO CARD DE JUGADOR ---
             item {
                 Box(
@@ -203,6 +374,33 @@ fun ProfileScreen(navController: NavHostController, viewModel: ProfileViewModel 
                                     Spacer(Modifier.width(6.dp))
                                     Icon(Icons.Default.Verified, null, tint = LimeNeon, modifier = Modifier.size(18.dp))
                                 }
+                                Surface(
+                                    color = when (userRole) {
+                                        UserRole.CAPITAN -> Color(0xFFFEF3C7)
+                                        UserRole.ARBITRO -> Color(0xFFF3E8FF)
+                                        UserRole.ADMIN_CANCHA -> Color(0xFFFEE2E2)
+                                        UserRole.JUGADOR_CON_EQUIPO -> Color(0xFFDBEAFE)
+                                        UserRole.JUGADOR_LIBRE -> Color(0xFFDCFCE7)
+                                        UserRole.INVITADO -> Color(0xFFF3F4F6)
+                                    },
+                                    shape = RoundedCornerShape(6.dp),
+                                    modifier = Modifier.padding(top = 2.dp, bottom = 4.dp)
+                                ) {
+                                    Text(
+                                        text = userRole.displayName.uppercase(),
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = when (userRole) {
+                                            UserRole.CAPITAN -> Color(0xFF92400E)
+                                            UserRole.ARBITRO -> Color(0xFF6B21A8)
+                                            UserRole.ADMIN_CANCHA -> Color(0xFF991B1B)
+                                            UserRole.JUGADOR_CON_EQUIPO -> Color(0xFF1E40AF)
+                                            UserRole.JUGADOR_LIBRE -> Color(0xFF15803D)
+                                            UserRole.INVITADO -> Color(0xFF374151)
+                                        },
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
                                 Text(
                                     "${userPosition.uppercase()} • DORSAL #10",
                                     fontSize = 12.sp,
@@ -241,13 +439,13 @@ fun ProfileScreen(navController: NavHostController, viewModel: ProfileViewModel 
                         ) {
                             Button(
                                 onClick = { navController.navigate("player_card/1") },
-                                colors = ButtonDefaults.buttonColors(containerColor = LimeNeon, contentColor = DarkForestGreen),
+                                colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = Color.White),
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier.weight(1.3f).height(42.dp).testTag("view_fifa_card_button")
                             ) {
-                                Icon(Icons.Default.ElectricBolt, null, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Default.ElectricBolt, null, tint = Color.White, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(6.dp))
-                                Text("Ficha FIFA 87", fontWeight = FontWeight.Black, fontSize = 12.sp)
+                                Text("Ficha FIFA 87", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color.White)
                             }
 
                             OutlinedButton(
@@ -464,6 +662,313 @@ fun ProfileScreen(navController: NavHostController, viewModel: ProfileViewModel 
                                     Text(result, fontSize = 11.sp, color = if (result.contains("Victoria")) Color(0xFF16A34A) else Color(0xFFDC2626))
                                 }
                                 Text(time, fontSize = 10.sp, color = TextSecondary)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // --- GESTIÓN DE ROLES Y PORTALES ESPECIALES ---
+            item {
+                Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)) {
+                    Text(
+                        "GESTIÓN DE ROL Y PORTALES",
+                        fontWeight = FontWeight.Black,
+                        fontSize = 12.sp,
+                        color = TextPrimary
+                    )
+                    Spacer(Modifier.height(8.dp))
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = CardWhite),
+                        border = BorderStroke(1.2.dp, BorderGray)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        "MODO DE OPERACIÓN ACTIVO",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = DarkForestGreen,
+                                        letterSpacing = 0.5.sp
+                                    )
+                                    Text(
+                                        "Alterna entre roles para probar cada portal",
+                                        fontSize = 11.5.sp,
+                                        color = TextSecondary
+                                    )
+                                }
+
+                                Surface(
+                                    color = when (userRole) {
+                                        UserRole.CAPITAN -> Color(0xFFFEF3C7)
+                                        UserRole.ARBITRO -> Color(0xFFF3E8FF)
+                                        UserRole.ADMIN_CANCHA -> Color(0xFFFEE2E2)
+                                        UserRole.JUGADOR_CON_EQUIPO -> Color(0xFFDBEAFE)
+                                        UserRole.JUGADOR_LIBRE -> Color(0xFFDCFCE7)
+                                        UserRole.INVITADO -> Color(0xFFF3F4F6)
+                                    },
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text(
+                                        text = userRole.displayName.uppercase(),
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = when (userRole) {
+                                            UserRole.CAPITAN -> Color(0xFF92400E)
+                                            UserRole.ARBITRO -> Color(0xFF6B21A8)
+                                            UserRole.ADMIN_CANCHA -> Color(0xFF991B1B)
+                                            UserRole.JUGADOR_CON_EQUIPO -> Color(0xFF1E40AF)
+                                            UserRole.JUGADOR_LIBRE -> Color(0xFF15803D)
+                                            UserRole.INVITADO -> Color(0xFF374151)
+                                        },
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(Modifier.height(14.dp))
+
+                            // 4 botones de alternancia de rol
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                listOf(
+                                    Triple(UserRole.CAPITAN, "👑 Capitán", Color(0xFFFEF3C7)),
+                                    Triple(UserRole.JUGADOR_LIBRE, "⚽ Jugador", Color(0xFFDCFCE7)),
+                                    Triple(UserRole.ADMIN_CANCHA, "🏟️ Canchas", Color(0xFFFEE2E2)),
+                                    Triple(UserRole.ARBITRO, "⚖️ Árbitro", Color(0xFFF3E8FF))
+                                ).forEach { (role, label, bgTint) ->
+                                    val isSelected = userRole == role
+                                    Surface(
+                                        onClick = {
+                                            if (role == UserRole.JUGADOR_LIBRE && userRole == UserRole.ARBITRO) {
+                                                // El árbitro quiere jugar: abrir diálogo de selección de posición
+                                                pendingPositionForRoleSwitch = userPosition
+                                                showPositionSelectionDialog = true
+                                            } else {
+                                                userRole = role
+                                                sessionManager.saveUserRole(role)
+                                                Toast.makeText(
+                                                    context,
+                                                    "Rol cambiado a: ${role.displayName}",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        },
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = if (isSelected) DarkForestGreen else bgTint,
+                                        border = BorderStroke(1.dp, if (isSelected) DarkForestGreen else BorderGray),
+                                        modifier = Modifier.weight(1f).height(38.dp)
+                                    ) {
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier.fillMaxSize()
+                                        ) {
+                                            Text(
+                                                text = label,
+                                                fontSize = 10.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (isSelected) Color.White else TextPrimary
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Banner especial de Doble Rol para Árbitros
+                            if (userRole == UserRole.ARBITRO) {
+                                Surface(
+                                    color = Color(0xFFFAF5FF),
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = BorderStroke(1.dp, Color(0xFFE9D5FF)),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 10.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(10.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text("⚖️", fontSize = 20.sp)
+                                        Spacer(Modifier.width(8.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                "Doble Rol Habilitado",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 11.5.sp,
+                                                color = Color(0xFF6B21A8)
+                                            )
+                                            Text(
+                                                "Como árbitro colegiado también puedes jugar pichangas ($userPosition).",
+                                                fontSize = 10.5.sp,
+                                                color = Color(0xFF7E22CE)
+                                            )
+                                        }
+                                        Button(
+                                            onClick = {
+                                                pendingPositionForRoleSwitch = userPosition
+                                                showPositionSelectionDialog = true
+                                            },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = DarkForestGreen,
+                                                contentColor = LimeNeon
+                                            ),
+                                            shape = RoundedCornerShape(8.dp),
+                                            modifier = Modifier.height(30.dp),
+                                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                                        ) {
+                                            Text("Jugar ⚽", fontSize = 10.5.sp, fontWeight = FontWeight.Black)
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(Modifier.height(14.dp))
+
+                            // Acceso directo al portal del rol seleccionado
+                            when (userRole) {
+                                UserRole.ADMIN_CANCHA -> {
+                                    Column {
+                                        Text(
+                                            "🏟️ PANEL DE ADMINISTRADOR DE CANCHAS",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 12.sp,
+                                            color = Color(0xFF991B1B)
+                                        )
+                                        Text(
+                                            "Controla turnos (08:00 a 23:00 hrs), estado disponible/mantenimiento, tarifas por hora y reservas de clientes.",
+                                            fontSize = 11.5.sp,
+                                            color = TextSecondary,
+                                            lineHeight = 15.sp,
+                                            modifier = Modifier.padding(vertical = 4.dp)
+                                        )
+                                        Spacer(Modifier.height(6.dp))
+                                        Button(
+                                            onClick = { navController.navigate(Screen.CourtManagement.route) },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = DarkForestGreen,
+                                                contentColor = Color.White
+                                            ),
+                                            shape = RoundedCornerShape(12.dp),
+                                            modifier = Modifier.fillMaxWidth().height(44.dp)
+                                        ) {
+                                            Icon(Icons.Outlined.Stadium, null, tint = LimeNeon, modifier = Modifier.size(18.dp))
+                                            Spacer(Modifier.width(8.dp))
+                                            Text("Abrir Panel de Gestión de Canchas", fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
+                                        }
+                                    }
+                                }
+                                UserRole.ARBITRO -> {
+                                    Column {
+                                        Text(
+                                            "⚖️ PANEL DE ÁRBITRO FEDERADO CODAR",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 12.sp,
+                                            color = Color(0xFF6B21A8)
+                                        )
+                                        Text(
+                                            "Figuras en el catálogo oficial de árbitros de Chiclayo. Puedes revisar partidos asignados, tarifas por hora y actas disciplinarias.",
+                                            fontSize = 11.5.sp,
+                                            color = TextSecondary,
+                                            lineHeight = 15.sp,
+                                            modifier = Modifier.padding(vertical = 4.dp)
+                                        )
+                                        Spacer(Modifier.height(6.dp))
+                                        Button(
+                                            onClick = { navController.navigate(Screen.RefereeDirectory.route) },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = DarkForestGreen,
+                                                contentColor = Color.White
+                                            ),
+                                            shape = RoundedCornerShape(12.dp),
+                                            modifier = Modifier.fillMaxWidth().height(44.dp)
+                                        ) {
+                                            Icon(Icons.Outlined.Gavel, null, tint = LimeNeon, modifier = Modifier.size(18.dp))
+                                            Spacer(Modifier.width(8.dp))
+                                            Text("Ver Directorio de Árbitros y Actas", fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
+                                        }
+                                    }
+                                }
+                                UserRole.CAPITAN -> {
+                                    Column {
+                                        Text(
+                                            "👑 ACCIONES DE CAPITÁN DE EQUIPO",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 12.sp,
+                                            color = Color(0xFF92400E)
+                                        )
+                                        Text(
+                                            "Crea pichangas en Chiclayo, convoca refuerzos o amigos anónimos, contrata árbitros oficiales y administra planteles.",
+                                            fontSize = 11.5.sp,
+                                            color = TextSecondary,
+                                            lineHeight = 15.sp,
+                                            modifier = Modifier.padding(vertical = 4.dp)
+                                        )
+                                        Spacer(Modifier.height(6.dp))
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Button(
+                                                onClick = { navController.navigate(Screen.CreateMatch.route) },
+                                                colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = Color.White),
+                                                shape = RoundedCornerShape(12.dp),
+                                                modifier = Modifier.weight(1f).height(44.dp)
+                                            ) {
+                                                Icon(Icons.Outlined.AddCircleOutline, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                                Spacer(Modifier.width(6.dp))
+                                                Text("Crear Partido", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                            }
+                                            OutlinedButton(
+                                                onClick = { navController.navigate(Screen.MyTeam.route) },
+                                                shape = RoundedCornerShape(12.dp),
+                                                border = BorderStroke(1.2.dp, DarkForestGreen),
+                                                modifier = Modifier.weight(1f).height(44.dp)
+                                            ) {
+                                                Icon(Icons.Outlined.Groups, null, tint = DarkForestGreen, modifier = Modifier.size(16.dp))
+                                                Spacer(Modifier.width(6.dp))
+                                                Text("Mis Equipos", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = DarkForestGreen)
+                                            }
+                                        }
+                                    }
+                                }
+                                else -> {
+                                    Column {
+                                        Text(
+                                            "⚽ ACCIONES DE JUGADOR LIBRE / PICHANGUERO",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 12.sp,
+                                            color = Color(0xFF15803D)
+                                        )
+                                        Text(
+                                            "Explora partidos que necesitan cupos en Patazca, Pimentel o La Victoria. Tu ficha FIFA 3D y valoraciones se actualizan en cada encuentro.",
+                                            fontSize = 11.5.sp,
+                                            color = TextSecondary,
+                                            lineHeight = 15.sp,
+                                            modifier = Modifier.padding(vertical = 4.dp)
+                                        )
+                                        Spacer(Modifier.height(6.dp))
+                                        Button(
+                                            onClick = { navController.navigate(Screen.Home.route) },
+                                            colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = Color.White),
+                                            shape = RoundedCornerShape(12.dp),
+                                            modifier = Modifier.fillMaxWidth().height(44.dp)
+                                        ) {
+                                            Icon(Icons.Outlined.Search, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                            Spacer(Modifier.width(8.dp))
+                                            Text("Explorar Pichangas Cerca de Mí", fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

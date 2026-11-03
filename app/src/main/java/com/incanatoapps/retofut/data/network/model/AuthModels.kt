@@ -47,6 +47,109 @@ data class ResetPasswordRequest(
     val passwordConfirmation: String
 )
 
+// --- Roles de Usuario de FUTBULERO ---
+enum class UserRole(
+    val code: String,
+    val displayName: String,
+    val description: String
+) {
+    JUGADOR_CON_EQUIPO(
+        code = "JUGADOR_CON_EQUIPO",
+        displayName = "Jugador con Equipo",
+        description = "Pertenece a un club o equipo oficial"
+    ),
+    JUGADOR_LIBRE(
+        code = "JUGADOR_LIBRE",
+        displayName = "Jugador Libre",
+        description = "Sin equipo, disponible para pichangas y fichajes"
+    ),
+    CAPITAN(
+        code = "CAPITAN",
+        displayName = "Capitán",
+        description = "Administra plantilla, alineaciones y reta equipos"
+    ),
+    ARBITRO(
+        code = "ARBITRO",
+        displayName = "Árbitro",
+        description = "Dirige partidos, registra faltas y valida resultados"
+    ),
+    ADMIN_CANCHA(
+        code = "ADMIN_CANCHA",
+        displayName = "Admin de Cancha",
+        description = "Gestiona alquileres, sedes y horarios de complejos"
+    ),
+    INVITADO(
+        code = "INVITADO",
+        displayName = "Invitado",
+        description = "Modo exploración para ver pichangas sin registrarse"
+    );
+
+    companion object {
+        fun fromString(value: String?): UserRole {
+            if (value.isNullOrBlank()) return JUGADOR_LIBRE
+            return try {
+                valueOf(value.trim().uppercase())
+            } catch (e: Exception) {
+                entries.firstOrNull {
+                    it.code.equals(value.trim(), ignoreCase = true) ||
+                    it.displayName.equals(value.trim(), ignoreCase = true)
+                } ?: JUGADOR_LIBRE
+            }
+        }
+    }
+}
+
+// Modelo para Jugadores Anónimos / Invitados convocados por el Capitán
+data class AnonymousPlayer(
+    val id: Int,
+    val name: String,
+    val position: String,
+    val number: Int = 0,
+    val rating: Int = 78,
+    val isAnonymous: Boolean = true
+)
+
+// Árbitros disponibles para partidos oficiales de FUTBULERO
+data class MatchReferee(
+    val id: Int,
+    val name: String,
+    val association: String,
+    val rating: Double,
+    val matchesOfficiated: Int,
+    val fee: Double
+)
+
+// Solicitud de Jugador Libre para unirse a un equipo en un partido
+data class MatchPlayerRequest(
+    val id: Int,
+    val playerName: String,
+    val position: String,
+    val rating: Int,
+    val requestedTeam: String,
+    val status: String = "PENDIENTE", // PENDIENTE, ACEPTADA, RECHAZADA
+    val avatarInitials: String = "JL"
+)
+
+// Mensaje en el Chat grupal del Partido
+data class MatchChatMessage(
+    val id: Long,
+    val senderName: String,
+    val senderRole: String,
+    val message: String,
+    val time: String,
+    val isMe: Boolean = false
+)
+
+// Apuesta realizada en el partido (Pozo de equipos o espectadores)
+data class MatchBet(
+    val id: Long,
+    val bettorName: String,
+    val teamChosen: String,
+    val amount: Double,
+    val potentialWin: Double,
+    val time: String
+)
+
 data class AuthData(
     @SerializedName("access_token")
     val accessToken: String,
@@ -63,11 +166,14 @@ data class UserResponse(
     val email: String,
     val telefono: String?,
     val foto: String?,
+    val rol: String? = null,
     @SerializedName("player_profile")
     val playerProfile: PlayerProfile?,
     @SerializedName("player_stats")
     val playerStats: PlayerStats?
-)
+) {
+    fun getRole(): UserRole = UserRole.fromString(rol)
+}
 
 data class PlayerProfile(
     val id: Int,

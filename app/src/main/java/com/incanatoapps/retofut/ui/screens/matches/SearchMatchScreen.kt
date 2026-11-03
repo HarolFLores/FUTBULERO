@@ -18,6 +18,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -35,9 +36,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.incanatoapps.retofut.data.SessionManager
 import com.incanatoapps.retofut.navigation.Screen
 import com.incanatoapps.retofut.ui.screens.dashboard.ChocoFulboBottomBar
 import com.incanatoapps.retofut.ui.theme.*
@@ -59,11 +62,22 @@ data class MapMatchItem(
 @Composable
 fun SearchMatchScreen(navController: NavHostController) {
     val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+    val isGuest = remember { sessionManager.isGuest() }
+    var showGuestDialog by remember { mutableStateOf(false) }
+    var showJoinTeamDialog by remember { mutableStateOf(false) }
+    var selectedMatchToJoin by remember { mutableStateOf<MapMatchItem?>(null) }
+    var chosenTeam by remember { mutableStateOf("Los Galácticos FC (Equipo A)") }
+    var chosenPosition by remember { mutableStateOf("DEL (Delantero)") }
+    var pendingRequestsByMatch by remember { mutableStateOf(mapOf<Int, String>()) }
+
     BackHandler { navController.popBackStack() }
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("Hoy") }
     var selectedMapPin by remember { mutableStateOf("Complejo San Juan") }
+    // Paginación y carga diferida por partes para la lista de partidos
+    var visibleMatchesCount by remember { mutableIntStateOf(3) }
 
     val filterOptions = listOf("Hoy", "Fin de semana", "Fútbol 7", "Canchas sintéticas", "Pimentel")
 
@@ -160,7 +174,7 @@ fun SearchMatchScreen(navController: NavHostController) {
                 Spacer(Modifier.weight(1f))
 
                 IconButton(onClick = {
-                    Toast.makeText(context, "No tienes notificaciones nuevas", Toast.LENGTH_SHORT).show()
+                    navController.navigate(Screen.Notifications.route)
                 }) {
                     Icon(Icons.Outlined.Notifications, contentDescription = "Notificaciones", tint = TextPrimary)
                 }
@@ -220,6 +234,41 @@ fun SearchMatchScreen(navController: NavHostController) {
             }
 
             Spacer(Modifier.height(10.dp))
+
+            // Banner de Modo Invitado
+            if (isGuest) {
+                Surface(
+                    color = Color(0xFFEFF6FF),
+                    border = BorderStroke(1.dp, Color(0xFFBFDBFE)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Outlined.Visibility, null, tint = Color(0xFF1D4ED8), modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "Modo Invitado • Viendo dónde se arman las pichangas",
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF1E40AF),
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "Acceder",
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = DarkForestGreen,
+                            modifier = Modifier.clickable { navController.navigate(Screen.Login.route) }
+                        )
+                    }
+                }
+                Spacer(Modifier.height(6.dp))
+            }
 
             // --- CHIPS DE FILTRO ---
             Row(
@@ -542,8 +591,8 @@ fun SearchMatchScreen(navController: NavHostController) {
                         Spacer(Modifier.height(12.dp))
                     }
 
-                    // Tarjetas de partidos
-                    items(matches) { match ->
+                    // Tarjetas de partidos con key única y paginación
+                    items(matches.take(visibleMatchesCount), key = { it.id }) { match ->
                         val isHighlighted = match.id == 1
                         Card(
                             modifier = Modifier
@@ -676,22 +725,284 @@ fun SearchMatchScreen(navController: NavHostController) {
                                         )
                                     }
 
+                                    val isPending = pendingRequestsByMatch.containsKey(match.id)
                                     Button(
                                         onClick = {
-                                            navController.navigate("match_detail/${match.id}")
+                                            if (isHighlighted) {
+                                                if (isGuest) {
+                                                    showGuestDialog = true
+                                                } else if (isPending) {
+                                                    Toast.makeText(context, "Ya tienes una solicitud PENDIENTE para ${pendingRequestsByMatch[match.id]}. Esperando aprobación del Capitán.", Toast.LENGTH_LONG).show()
+                                                } else {
+                                                    selectedMatchToJoin = match
+                                                    showJoinTeamDialog = true
+                                                }
+                                            } else {
+                                                navController.navigate("match_detail/${match.id}")
+                                            }
                                         },
-                                        colors = ButtonDefaults.buttonColors(containerColor = DarkForestGreen),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = if (isPending) Color(0xFFD97706) else DarkForestGreen,
+                                            contentColor = Color.White
+                                        ),
                                         shape = RoundedCornerShape(10.dp),
                                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 7.dp)
                                     ) {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Text(if (isHighlighted) "Inscribirse" else "Ver partido", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                            Text(
+                                                text = when {
+                                                    isPending -> "Pendiente ⏳"
+                                                    isHighlighted -> "Inscribirse"
+                                                    else -> "Ver partido"
+                                                },
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.White
+                                            )
                                             Spacer(Modifier.width(4.dp))
-                                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(13.dp))
+                                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = Color.White, modifier = Modifier.size(13.dp))
                                         }
                                     }
                                 }
                             }
+                        }
+                    }
+
+                    if (visibleMatchesCount < matches.size) {
+                        item(key = "load_more_matches_btn") {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 10.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                OutlinedButton(
+                                    onClick = { visibleMatchesCount = (visibleMatchesCount + 3).coerceAtMost(matches.size) },
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = BorderStroke(1.dp, ForestGreen.copy(alpha = 0.4f)),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkForestGreen)
+                                ) {
+                                    Icon(Icons.Default.ExpandMore, null, modifier = Modifier.size(16.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("Cargar más pichangas (${matches.size - visibleMatchesCount} restantes)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Modal de Restricción para Invitado en Búsqueda de Partidos
+    if (showGuestDialog) {
+        AlertDialog(
+            onDismissRequest = { showGuestDialog = false },
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFFEF3C7)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Outlined.Lock,
+                        contentDescription = null,
+                        tint = Color(0xFFD97706),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    text = "Inscripción a Pichanga",
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 18.sp,
+                    color = DarkForestGreen
+                )
+            },
+            text = {
+                Text(
+                    text = "Estás explorando en Modo Invitado. Para inscribirte y reservar tu cupo en esta pichanga necesitas iniciar sesión con tu cuenta.",
+                    fontSize = 13.5.sp,
+                    color = TextSecondary,
+                    textAlign = TextAlign.Center
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showGuestDialog = false
+                        navController.navigate(Screen.Login.route)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = DarkForestGreen, contentColor = Color.White),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Iniciar Sesión", fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showGuestDialog = false }) {
+                    Text("Seguir Explorando", color = TextSecondary)
+                }
+            },
+            shape = RoundedCornerShape(20.dp),
+            containerColor = Color.White
+        )
+    }
+
+    // Modal para que un JUGADOR_LIBRE elija a cuál de los dos equipos solicitar unirse
+    if (showJoinTeamDialog && selectedMatchToJoin != null) {
+        val match = selectedMatchToJoin!!
+        androidx.compose.ui.window.Dialog(onDismissRequest = { showJoinTeamDialog = false }) {
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = Color.White,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(22.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFDCFCE7)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Outlined.Groups,
+                            contentDescription = null,
+                            tint = DarkForestGreen,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        "Solicitar Unirse al Partido",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 18.sp,
+                        color = DarkForestGreen
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Como Jugador Libre, elige a cuál de los dos equipos deseas incorporarte. Tu solicitud quedará en estado PENDIENTE de aceptación por el Capitán.",
+                        fontSize = 12.sp,
+                        color = TextSecondary,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(Modifier.height(14.dp))
+
+                    // Opciones de Equipos
+                    Text(
+                        "SELECCIONA EQUIPO",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(6.dp))
+
+                    val teams = listOf(
+                        Pair("Los Galácticos FC (Equipo A)", "Capitán: Piero M. • 2 cupos libres"),
+                        Pair("Rayo Chiclayano (Equipo B)", "Capitán: Mateo F. • 1 cupo libre")
+                    )
+
+                    teams.forEach { (teamName, teamSubtitle) ->
+                        val isSelected = chosenTeam == teamName
+                        Surface(
+                            onClick = { chosenTeam = teamName },
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (isSelected) Color(0xFFF0FDF4) else Color(0xFFF9FAFB),
+                            border = BorderStroke(1.5.dp, if (isSelected) ForestGreen else BorderGray),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = isSelected,
+                                    onClick = { chosenTeam = teamName },
+                                    colors = RadioButtonDefaults.colors(selectedColor = DarkForestGreen)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Column {
+                                    Text(teamName, fontWeight = FontWeight.Bold, fontSize = 13.5.sp, color = TextPrimary)
+                                    Text(teamSubtitle, fontSize = 11.sp, color = if (isSelected) ForestGreen else TextSecondary)
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(10.dp))
+
+                    // Selector de posición
+                    Text(
+                        "TU POSICIÓN PREFERIDA",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        listOf("DEL", "MED", "DEF", "ARQ").forEach { pos ->
+                            val isPosSelected = chosenPosition.startsWith(pos)
+                            Surface(
+                                onClick = { chosenPosition = pos },
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (isPosSelected) DarkForestGreen else Color(0xFFF3F4F6),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Box(modifier = Modifier.padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
+                                    Text(
+                                        pos,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isPosSelected) LimeNeon else TextPrimary
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(18.dp))
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(
+                            onClick = { showJoinTeamDialog = false },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("Cancelar")
+                        }
+                        Button(
+                            onClick = {
+                                pendingRequestsByMatch = pendingRequestsByMatch + (match.id to chosenTeam)
+                                showJoinTeamDialog = false
+                                Toast.makeText(
+                                    context,
+                                    "¡Solicitud enviada al Capitán de $chosenTeam! Estado: PENDIENTE ⏳",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = Color.White),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1.3f)
+                        ) {
+                            Text("Enviar Solicitud", fontWeight = FontWeight.Bold, fontSize = 12.5.sp, color = Color.White)
                         }
                     }
                 }

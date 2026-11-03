@@ -16,10 +16,17 @@ import com.incanatoapps.retofut.data.network.model.AuthData
 import kotlinx.coroutines.launch
 import retrofit2.Response
 
+import com.incanatoapps.retofut.data.network.model.UserResponse
+
 sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
-    data class Success(val token: String? = null, val userId: Int? = null, val message: String? = null) : AuthState()
+    data class Success(
+        val token: String? = null,
+        val userId: Int? = null,
+        val user: UserResponse? = null,
+        val message: String? = null
+    ) : AuthState()
     data class Error(val message: String) : AuthState()
 }
 
@@ -144,11 +151,13 @@ class AuthViewModel : ViewModel() {
             val data = body.data
             var token: String? = null
             var userId: Int? = null
+            var user: UserResponse? = null
             if (data is AuthData) {
                 token = data.accessToken
                 userId = data.user?.id
+                user = data.user
             }
-            authState = AuthState.Success(token = token, userId = userId, message = body.message)
+            authState = AuthState.Success(token = token, userId = userId, user = user, message = body.message)
         } else {
             val errorMsg = parseErrorMessage(response) ?: "Error en la operación (${response.code()})"
             authState = AuthState.Error(errorMsg)

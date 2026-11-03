@@ -28,6 +28,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.incanatoapps.retofut.data.SessionManager
+import com.incanatoapps.retofut.data.network.model.MatchReferee
 import com.incanatoapps.retofut.navigation.Screen
 import com.incanatoapps.retofut.ui.screens.dashboard.ChocoFulboBottomBar
 import com.incanatoapps.retofut.ui.theme.*
@@ -36,6 +38,10 @@ import com.incanatoapps.retofut.ui.theme.*
 @Composable
 fun CreateMatchScreen(navController: NavHostController) {
     val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+    val isGuest = remember { sessionManager.isGuest() }
+    var showGuestDialog by remember { mutableStateOf(false) }
+
     BackHandler { navController.popBackStack() }
 
     var matchTitle by remember { mutableStateOf("Pichanga Nocturna Los Galácticos") }
@@ -47,12 +53,46 @@ fun CreateMatchScreen(navController: NavHostController) {
     var currentStep by remember { mutableStateOf(1) }
     var showSuccessDialog by remember { mutableStateOf(false) }
 
-    val formatPlayers = when (selectedFormat) {
-        "Fútbol 5" -> 10
-        "Fútbol 7" -> 14
-        "Fútbol 8" -> 16
-        else -> 22
+    // Formato de partido y límite de cupos por equipo
+    val playersPerTeam = when (selectedFormat) {
+        "Fútbol 5" -> 5
+        "Fútbol 7" -> 7
+        "Fútbol 8" -> 8
+        else -> 11
     }
+    val formatPlayers = playersPerTeam * 2
+
+    // Árbitro Opcional
+    var requiresReferee by remember { mutableStateOf(false) }
+    val availableReferees = remember {
+        listOf(
+            MatchReferee(
+                id = 1,
+                name = "Juan Carlos Pérez",
+                association = "Asoc. Árbitros Lambayeque (Rol ARBITRO)",
+                rating = 4.9,
+                matchesOfficiated = 48,
+                fee = 35.0
+            ),
+            MatchReferee(
+                id = 2,
+                name = "Roberto 'Cholo' Miranda",
+                association = "Colegio de Árbitros Chiclayo (Rol ARBITRO)",
+                rating = 4.8,
+                matchesOfficiated = 62,
+                fee = 40.0
+            ),
+            MatchReferee(
+                id = 3,
+                name = "Marcos Delgado S.",
+                association = "Liga Distrital Pimentel (Rol ARBITRO)",
+                rating = 4.7,
+                matchesOfficiated = 29,
+                fee = 30.0
+            )
+        )
+    }
+    var selectedReferee by remember { mutableStateOf<MatchReferee?>(availableReferees.first()) }
 
     val totalCost = pricePerPlayer * formatPlayers
 
@@ -218,48 +258,80 @@ fun CreateMatchScreen(navController: NavHostController) {
                     )
                 }
 
-                // Tipo de Juego
+                // Formato de Partido y Límite de Jugadores por Equipo
                 Column {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Tipo de Juego", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary)
-                        Text(
-                            "$formatPlayers JUGADORES",
-                            fontSize = 11.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = ForestGreen
-                        )
+                        Text("Formato de Partido", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary)
+                        Surface(
+                            color = Color(0xFFDCFCE7),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Text(
+                                "$playersPerTeam POR EQUIPO • $formatPlayers TOTAL",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Black,
+                                color = DarkForestGreen,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
+                        }
                     }
                     Spacer(Modifier.height(8.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        listOf("Fútbol 5", "Fútbol 7", "Fútbol 8", "Fútbol 11").forEach { format ->
+                        listOf(
+                            Triple("Fútbol 5", "5 vs 5", "10 cupos"),
+                            Triple("Fútbol 7", "7 vs 7", "14 cupos"),
+                            Triple("Fútbol 8", "8 vs 8", "16 cupos"),
+                            Triple("Fútbol 11", "11 vs 11", "22 cupos")
+                        ).forEach { (format, vsText, totalText) ->
                             val isSelected = selectedFormat == format
                             Surface(
                                 onClick = { selectedFormat = format },
-                                color = if (isSelected) LimeNeon else Color(0xFFF3F4F6),
-                                shape = RoundedCornerShape(10.dp),
+                                color = if (isSelected) DarkForestGreen else Color(0xFFF3F4F6),
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, if (isSelected) LimeNeon else BorderGray),
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Box(
-                                    modifier = Modifier.padding(vertical = 10.dp),
-                                    contentAlignment = Alignment.Center
+                                Column(
+                                    modifier = Modifier.padding(vertical = 10.dp, horizontal = 2.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
                                         text = format,
-                                        fontSize = 12.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (isSelected) DarkForestGreen else TextPrimary
+                                        fontSize = 11.5.sp,
+                                        fontWeight = if (isSelected) FontWeight.Black else FontWeight.Bold,
+                                        color = if (isSelected) LimeNeon else TextPrimary,
+                                        maxLines = 1
+                                    )
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(
+                                        text = vsText,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = if (isSelected) Color.White.copy(alpha = 0.9f) else TextSecondary
+                                    )
+                                    Text(
+                                        text = totalText,
+                                        fontSize = 8.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSelected) LimeNeon.copy(alpha = 0.9f) else ForestGreen
                                     )
                                 }
                             }
                         }
                     }
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = "ℹ️ Límite establecido: Máximo $playersPerTeam jugadores por equipo ($formatPlayers cupos totales en cancha)",
+                        fontSize = 11.sp,
+                        color = TextSecondary
+                    )
                 }
 
                 // Fecha y Hora de Inicio
@@ -326,7 +398,7 @@ fun CreateMatchScreen(navController: NavHostController) {
                             fontWeight = FontWeight.Bold,
                             color = ForestGreen,
                             modifier = Modifier.clickable {
-                                Toast.makeText(context, "Selección de canchas disponible en Chiclayo", Toast.LENGTH_SHORT).show()
+                                navController.navigate("court_reservation/1")
                             }
                         )
                     }
@@ -507,6 +579,231 @@ fun CreateMatchScreen(navController: NavHostController) {
                     }
                 }
 
+                // --- ÁRBITRO OPCIONAL ---
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = BorderStroke(1.2.dp, if (requiresReferee) ForestGreen else BorderGray)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape)
+                                        .background(if (requiresReferee) Color(0xFFFEF3C7) else Color(0xFFF3F4F6)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.Sports,
+                                        contentDescription = null,
+                                        tint = if (requiresReferee) Color(0xFFB45309) else Color(0xFF6B7280),
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                                Spacer(Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = "¿Es partido oficial / Requiere Árbitro?",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.5.sp,
+                                        color = TextPrimary
+                                    )
+                                    Text(
+                                        text = if (requiresReferee) "Partido oficial con réferi colegiado asignado"
+                                               else "Pichanga libre sin árbitro (juego limpio)",
+                                        fontSize = 11.sp,
+                                        color = if (requiresReferee) ForestGreen else TextSecondary
+                                    )
+                                }
+                            }
+                            Switch(
+                                checked = requiresReferee,
+                                onCheckedChange = { requiresReferee = it },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Color.White,
+                                    checkedTrackColor = DarkForestGreen,
+                                    uncheckedThumbColor = Color.White,
+                                    uncheckedTrackColor = Color(0xFFD1D5DB)
+                                ),
+                                modifier = Modifier.testTag("match_referee_switch")
+                            )
+                        }
+
+                        if (!requiresReferee) {
+                            Spacer(Modifier.height(10.dp))
+                            Surface(
+                                color = Color(0xFFF9FAFB),
+                                shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.dp, BorderGray),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Outlined.CheckCircle, null, tint = ForestGreen, modifier = Modifier.size(16.dp))
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        text = "Modalidad Libre: Los capitanes y jugadores coordinan saques, faltas y tiempo de juego bajo respeto mutuo.",
+                                        fontSize = 11.5.sp,
+                                        color = TextSecondary,
+                                        lineHeight = 15.sp
+                                    )
+                                }
+                            }
+                        } else {
+                            Spacer(Modifier.height(14.dp))
+                            HorizontalDivider(color = BorderGray, thickness = 0.8.dp)
+                            Spacer(Modifier.height(12.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "ÁRBITROS DISPONIBLES (ROL ARBITRO)",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = ForestGreen,
+                                    letterSpacing = 0.5.sp
+                                )
+                                Surface(color = Color(0xFFF3E8FF), shape = RoundedCornerShape(4.dp)) {
+                                    Text(
+                                        "COLEGIADOS CHICLAYO",
+                                        fontSize = 8.5.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = Color(0xFF6B21A8),
+                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = "Elige al árbitro federado para dirigir y validar el resultado oficial:",
+                                fontSize = 11.5.sp,
+                                color = TextSecondary
+                            )
+                            Spacer(Modifier.height(10.dp))
+
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                availableReferees.forEach { ref ->
+                                    val isSelected = selectedReferee?.id == ref.id
+                                    Surface(
+                                        onClick = { selectedReferee = ref },
+                                        color = if (isSelected) Color(0xFFF0FDF4) else Color.White,
+                                        shape = RoundedCornerShape(12.dp),
+                                        border = BorderStroke(
+                                            1.5.dp,
+                                            if (isSelected) ForestGreen else BorderGray
+                                        ),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(12.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(38.dp)
+                                                    .clip(CircleShape)
+                                                    .background(if (isSelected) DarkForestGreen else Color(0xFFE5E7EB)),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    ref.name.split(" ").mapNotNull { it.firstOrNull()?.toString() }.take(2).joinToString(""),
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 12.sp,
+                                                    color = if (isSelected) LimeNeon else TextPrimary
+                                                )
+                                            }
+
+                                            Spacer(Modifier.width(10.dp))
+
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Text(
+                                                        ref.name,
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 13.5.sp,
+                                                        color = TextPrimary
+                                                    )
+                                                    if (isSelected) {
+                                                        Spacer(Modifier.width(6.dp))
+                                                        Icon(Icons.Outlined.CheckCircle, null, tint = ForestGreen, modifier = Modifier.size(15.dp))
+                                                    }
+                                                }
+                                                Text(
+                                                    ref.association,
+                                                    fontSize = 10.5.sp,
+                                                    color = TextSecondary
+                                                )
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Text(
+                                                        "⭐ ${ref.rating}",
+                                                        fontSize = 11.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = Color(0xFFB45309)
+                                                    )
+                                                    Text(
+                                                        " • ${ref.matchesOfficiated} partidos dirigidos",
+                                                        fontSize = 11.sp,
+                                                        color = TextSecondary
+                                                    )
+                                                }
+                                            }
+
+                                            Column(horizontalAlignment = Alignment.End) {
+                                                Text(
+                                                    "S/. ${ref.fee.toInt()}.00",
+                                                    fontWeight = FontWeight.Black,
+                                                    fontSize = 14.sp,
+                                                    color = DarkForestGreen
+                                                )
+                                                Text(
+                                                    "Honorario",
+                                                    fontSize = 9.5.sp,
+                                                    color = TextSecondary
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Spacer(Modifier.height(10.dp))
+                                OutlinedButton(
+                                    onClick = { navController.navigate(Screen.RefereeDirectory.route) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(42.dp)
+                                        .testTag("btn_view_referee_directory"),
+                                    shape = RoundedCornerShape(10.dp),
+                                    border = BorderStroke(1.2.dp, ForestGreen)
+                                ) {
+                                    Icon(Icons.Outlined.Badge, null, tint = ForestGreen, modifier = Modifier.size(16.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text(
+                                        "Ver Directorio Completo CODAR Chiclayo",
+                                        color = ForestGreen,
+                                        fontSize = 11.5.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Tipo de Acceso (Público vs Privado)
                 Column {
                     Text("Tipo de Acceso", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary)
@@ -575,18 +872,24 @@ fun CreateMatchScreen(navController: NavHostController) {
 
                 // Botón Siguiente: Armar Planteles
                 Button(
-                    onClick = { showSuccessDialog = true },
+                    onClick = {
+                        if (isGuest) {
+                            showGuestDialog = true
+                        } else {
+                            showSuccessDialog = true
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(54.dp)
                         .testTag("submit_create_match"),
                     shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = DarkForestGreen)
+                    colors = ButtonDefaults.buttonColors(containerColor = DarkForestGreen, contentColor = Color.White)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Siguiente: Armar Planteles", fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                        Text("Siguiente: Armar Planteles", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         Spacer(Modifier.width(8.dp))
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(18.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = Color.White, modifier = Modifier.size(18.dp))
                     }
                 }
             }
@@ -605,8 +908,13 @@ fun CreateMatchScreen(navController: NavHostController) {
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Tu pichanga '$matchTitle' ya está publicada en ChocoFulbo.", fontSize = 13.5.sp)
-                    Text("• Formato: $selectedFormat ($formatPlayers jugadores)", fontSize = 13.sp)
+                    Text("Tu pichanga '$matchTitle' ya está publicada en FUTBULERO.", fontSize = 13.5.sp)
+                    Text("• Formato: $selectedFormat ($playersPerTeam por equipo • $formatPlayers cupos totales)", fontSize = 13.sp)
+                    if (requiresReferee && selectedReferee != null) {
+                        Text("• Árbitro Asignado: ${selectedReferee?.name} (⭐ ${selectedReferee?.rating} • S/. ${selectedReferee?.fee?.toInt()}.00)", fontSize = 13.sp, color = Color(0xFF6B21A8), fontWeight = FontWeight.SemiBold)
+                    } else {
+                        Text("• Arbitraje: Pichanga Libre (Juego limpio sin árbitro)", fontSize = 13.sp, color = ForestGreen)
+                    }
                     Text("• Horario: $matchDate a las $matchTime", fontSize = 13.sp)
                     Text("• Sede: Complejo El Oasis - Cancha 2", fontSize = 13.sp)
                     Text("• Cuota: S/. $pricePerPlayer.00 por cupo", fontSize = 13.sp, fontWeight = FontWeight.Bold)
@@ -618,10 +926,10 @@ fun CreateMatchScreen(navController: NavHostController) {
                         showSuccessDialog = false
                         navController.navigate("match_detail/1")
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = DarkForestGreen),
+                    colors = ButtonDefaults.buttonColors(containerColor = DarkForestGreen, contentColor = Color.White),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Ver Partido Publicado")
+                    Text("Ver Partido Publicado", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -630,6 +938,64 @@ fun CreateMatchScreen(navController: NavHostController) {
                     navController.popBackStack()
                 }) {
                     Text("Volver al Inicio")
+                }
+            },
+            shape = RoundedCornerShape(20.dp),
+            containerColor = Color.White
+        )
+    }
+
+    // Modal Restricción Modo Invitado
+    if (showGuestDialog) {
+        AlertDialog(
+            onDismissRequest = { showGuestDialog = false },
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFFEF3C7)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Outlined.Lock,
+                        contentDescription = null,
+                        tint = Color(0xFFD97706),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            },
+            title = {
+                Text(
+                    text = "Acción Restringida",
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 18.sp,
+                    color = DarkForestGreen
+                )
+            },
+            text = {
+                Text(
+                    text = "Estás en Modo Invitado. Para crear y publicar partidos o retos necesitas iniciar sesión o registrarte con una cuenta.",
+                    fontSize = 13.5.sp,
+                    color = TextSecondary,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showGuestDialog = false
+                        navController.navigate(Screen.Login.route)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = DarkForestGreen, contentColor = Color.White),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Iniciar Sesión", fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showGuestDialog = false }) {
+                    Text("Cancelar", color = TextSecondary)
                 }
             },
             shape = RoundedCornerShape(20.dp),

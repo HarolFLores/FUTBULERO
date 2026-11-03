@@ -12,11 +12,11 @@ import androidx.core.view.WindowCompat
 
 private val SoftUI_ColorScheme = lightColorScheme(
     primary = BrandGreen,
-    onPrimary = TextPrimary,
+    onPrimary = androidx.compose.ui.graphics.Color.White,
     primaryContainer = BrandGreenSoft,
     onPrimaryContainer = BrandGreenDeep,
-    secondary = BrandGreen,
-    onSecondary = TextPrimary,
+    secondary = ForestGreen,
+    onSecondary = androidx.compose.ui.graphics.Color.White,
     background = AppBackground,
     surface = CardWhite,
     onBackground = TextPrimary,

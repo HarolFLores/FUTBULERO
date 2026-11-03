@@ -21,8 +21,8 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.SportsSoccer
-import androidx.compose.material.icons.outlined.Visibility
-import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.incanatoapps.retofut.data.SessionManager
+import com.incanatoapps.retofut.data.network.model.UserRole
 import com.incanatoapps.retofut.navigation.Screen
 import com.incanatoapps.retofut.ui.theme.*
 
@@ -55,7 +56,23 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
     var phone by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var selectedRole by remember { mutableStateOf(UserRole.JUGADOR_LIBRE) }
     var selectedPosition by remember { mutableStateOf("Delantero") }
+
+    // Campos para Administrador de Cancha
+    var complexName by remember { mutableStateOf("") }
+    var selectedDistrict by remember { mutableStateOf("Chiclayo Centro") }
+    var complexAddress by remember { mutableStateOf("") }
+    var complexRuc by remember { mutableStateOf("") }
+    var courtCount by remember { mutableIntStateOf(2) }
+    var selectedFormats by remember { mutableStateOf(setOf("Fútbol 7", "Fútbol 6")) }
+
+    // Campos para Árbitro Colegiado CODAR
+    var refereeLicense by remember { mutableStateOf("") }
+    var refereeCategory by remember { mutableStateOf("Primera Categoría FPF") }
+    var refereeFee by remember { mutableDoubleStateOf(35.0) }
+    var refereeSpecialty by remember { mutableStateOf("Fútbol 7 & 8 Grass Sintético") }
+
     var acceptedTerms by remember { mutableStateOf(false) }
     var validationError by remember { mutableStateOf<String?>(null) }
 
@@ -73,7 +90,32 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
             authState.token?.let { sessionManager.saveAuthToken(it) }
             authState.userId?.let { sessionManager.saveUserId(it) }
             sessionManager.saveUserName(name.trim())
-            sessionManager.savePreferredPosition(selectedPosition)
+            sessionManager.saveUserRole(selectedRole)
+
+            when (selectedRole) {
+                UserRole.JUGADOR_LIBRE -> {
+                    sessionManager.savePreferredPosition(selectedPosition)
+                }
+                UserRole.ADMIN_CANCHA -> {
+                    sessionManager.saveCourtAdminDetails(
+                        complexName = complexName.ifBlank { "Complejo Deportivo El Oasis" },
+                        district = selectedDistrict,
+                        address = complexAddress.ifBlank { "Av. Los Tréboles 450, Santa Victoria" },
+                        ruc = complexRuc.ifBlank { "20608765432" },
+                        courtsCount = courtCount,
+                        formats = selectedFormats.joinToString(", ")
+                    )
+                }
+                UserRole.ARBITRO -> {
+                    sessionManager.saveRefereeDetails(
+                        license = refereeLicense.ifBlank { "CODAR-LAMB-#4829" },
+                        category = refereeCategory,
+                        fee = refereeFee,
+                        specialty = refereeSpecialty
+                    )
+                }
+                else -> {}
+            }
 
             navController.navigate(Screen.Home.route) {
                 popUpTo(Screen.Login.route) { inclusive = true }
@@ -96,12 +138,46 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
             validationError = "Ingresa tu número de WhatsApp válido (9 dígitos)"
         } else if (password.isBlank() || password.length < 6) {
             validationError = "La contraseña debe tener al menos 6 caracteres"
+        } else if (selectedRole == UserRole.ADMIN_CANCHA && complexName.trim().isBlank()) {
+            validationError = "Ingresa el nombre de tu complejo deportivo"
+        } else if (selectedRole == UserRole.ADMIN_CANCHA && complexAddress.trim().isBlank()) {
+            validationError = "Ingresa la dirección exacta de tu complejo deportivo"
+        } else if (selectedRole == UserRole.ADMIN_CANCHA && complexRuc.trim().length < 8) {
+            validationError = "Ingresa el RUC o DNI del administrador (mínimo 8 dígitos)"
+        } else if (selectedRole == UserRole.ARBITRO && refereeLicense.trim().isBlank()) {
+            validationError = "Ingresa tu Nº de Carnet o Licencia CODAR / FPF"
         } else if (!acceptedTerms) {
             validationError = "Debes aceptar las reglas de la comunidad y términos"
         } else {
             validationError = null
             sessionManager.saveUserName(trimmedName)
-            sessionManager.savePreferredPosition(selectedPosition)
+            sessionManager.saveUserRole(selectedRole)
+
+            when (selectedRole) {
+                UserRole.JUGADOR_LIBRE -> {
+                    sessionManager.savePreferredPosition(selectedPosition)
+                }
+                UserRole.ADMIN_CANCHA -> {
+                    sessionManager.saveCourtAdminDetails(
+                        complexName = complexName.trim(),
+                        district = selectedDistrict,
+                        address = complexAddress.trim(),
+                        ruc = complexRuc.trim(),
+                        courtsCount = courtCount,
+                        formats = selectedFormats.joinToString(", ")
+                    )
+                }
+                UserRole.ARBITRO -> {
+                    sessionManager.saveRefereeDetails(
+                        license = refereeLicense.trim(),
+                        category = refereeCategory,
+                        fee = refereeFee,
+                        specialty = refereeSpecialty
+                    )
+                }
+                else -> {}
+            }
+
             val fullPhone = "+51 $cleanPhone"
             viewModel.register(trimmedName, trimmedEmail, fullPhone, password, password)
         }
@@ -200,7 +276,31 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                                         sessionManager.saveAuthToken("demo_token_chiclayo")
                                         sessionManager.saveUserId(1)
                                         sessionManager.saveUserName(name.ifBlank { "Carlos Mendoza" })
-                                        sessionManager.savePreferredPosition(selectedPosition)
+                                        sessionManager.saveUserRole(selectedRole)
+                                        when (selectedRole) {
+                                            UserRole.JUGADOR_LIBRE -> {
+                                                sessionManager.savePreferredPosition(selectedPosition)
+                                            }
+                                            UserRole.ADMIN_CANCHA -> {
+                                                sessionManager.saveCourtAdminDetails(
+                                                    complexName = complexName.ifBlank { "Complejo Deportivo El Oasis" },
+                                                    district = selectedDistrict,
+                                                    address = complexAddress.ifBlank { "Av. Los Tréboles 450, Santa Victoria" },
+                                                    ruc = complexRuc.ifBlank { "20608765432" },
+                                                    courtsCount = courtCount,
+                                                    formats = selectedFormats.joinToString(", ")
+                                                )
+                                            }
+                                            UserRole.ARBITRO -> {
+                                                sessionManager.saveRefereeDetails(
+                                                    license = refereeLicense.ifBlank { "CODAR-LAMB-#4829" },
+                                                    category = refereeCategory,
+                                                    fee = refereeFee,
+                                                    specialty = refereeSpecialty
+                                                )
+                                            }
+                                            else -> {}
+                                        }
                                         navController.navigate(Screen.Home.route) {
                                             popUpTo(Screen.Login.route) { inclusive = true }
                                         }
@@ -335,60 +435,514 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                 )
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(18.dp))
 
-            // Selector: POSICIÓN PREFERIDA
+            // Selector: ¿CUÁL ES TU ROL EN CHOCOFULBO?
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                FormLabel("POSICIÓN PREFERIDA", modifier = Modifier.padding(bottom = 0.dp))
-                Text(
-                    text = "⚽ Elige tu zona",
-                    fontSize = 12.sp,
-                    color = ForestGreen,
-                    fontWeight = FontWeight.SemiBold
-                )
+                FormLabel("¿CUÁL ES TU ROL EN CHOCOFULBO?", modifier = Modifier.padding(bottom = 0.dp))
+                Surface(color = Color(0xFFDCFCE7), shape = RoundedCornerShape(6.dp)) {
+                    Text(
+                        text = "3 ROLES",
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Black,
+                        color = DarkForestGreen,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
             }
 
             Spacer(Modifier.height(8.dp))
 
-            // Grilla 2x2 de Posiciones
+            // 3 roles disponibles (Capitán no se elige en registro, se obtiene al fundar equipo o por cesión)
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                RoleSelectionCard(
+                    role = UserRole.JUGADOR_LIBRE,
+                    title = "Jugador / Pichanguero",
+                    subtitle = "Únete a pichangas con cupos, califica rivales y sube tu OVR FIFA",
+                    badge = "POR DEFECTO",
+                    badgeColor = Color(0xFFDCFCE7),
+                    badgeTextColor = Color(0xFF15803D),
+                    isSelected = selectedRole == UserRole.JUGADOR_LIBRE,
+                    onClick = { selectedRole = UserRole.JUGADOR_LIBRE }
+                )
+                RoleSelectionCard(
+                    role = UserRole.ADMIN_CANCHA,
+                    title = "Dueño / Administrador de Cancha",
+                    subtitle = "Gestiona tu complejo deportivo, turnos (08:00 a 23:00) y tarifas",
+                    badge = "COMPLEJOS",
+                    badgeColor = Color(0xFFFEE2E2),
+                    badgeTextColor = Color(0xFF991B1B),
+                    isSelected = selectedRole == UserRole.ADMIN_CANCHA,
+                    onClick = { selectedRole = UserRole.ADMIN_CANCHA }
+                )
+                RoleSelectionCard(
+                    role = UserRole.ARBITRO,
+                    title = "Árbitro Colegiado CODAR",
+                    subtitle = "Dirige partidos oficiales, valida actas y fija tarifa por partido",
+                    badge = "OFICIAL FPF",
+                    badgeColor = Color(0xFFF3E8FF),
+                    badgeTextColor = Color(0xFF6B21A8),
+                    isSelected = selectedRole == UserRole.ARBITRO,
+                    onClick = { selectedRole = UserRole.ARBITRO }
+                )
+            }
+
+            // Nota informativa sobre cómo convertirse en Capitán
+            Surface(
+                color = Color(0xFFFFFBEB),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, Color(0xFFFDE68A)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp, bottom = 12.dp)
+            ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    PositionCard(
-                        title = "Delantero",
-                        isSelected = selectedPosition == "Delantero",
-                        modifier = Modifier.weight(1f),
-                        onClick = { selectedPosition = "Delantero" }
-                    )
-                    PositionCard(
-                        title = "Mediocampista",
-                        isSelected = selectedPosition == "Mediocampista",
-                        modifier = Modifier.weight(1f),
-                        onClick = { selectedPosition = "Mediocampista" }
+                    Text(
+                        text = "💡 ¿Quieres ser Capitán? Todo usuario inicia como Jugador. Al fundar tu propio equipo o al recibir la cinta de capitán de un compañero, tu rol ascenderá automáticamente a Capitán 👑.",
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF92400E),
+                        lineHeight = 16.sp
                     )
                 }
+            }
+
+            // ========================================================
+            // CAMPOS CONDICIONALES SEGÚN EL ROL SELECCIONADO
+            // ========================================================
+
+            // 1. ROL: JUGADOR LIBRE -> Posición Preferida
+            if (selectedRole == UserRole.JUGADOR_LIBRE) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    PositionCard(
-                        title = "Defensa",
-                        isSelected = selectedPosition == "Defensa",
-                        modifier = Modifier.weight(1f),
-                        onClick = { selectedPosition = "Defensa" }
+                    FormLabel("POSICIÓN PREFERIDA", modifier = Modifier.padding(bottom = 0.dp))
+                    Text(
+                        text = "⚽ Elige tu zona",
+                        fontSize = 12.sp,
+                        color = ForestGreen,
+                        fontWeight = FontWeight.SemiBold
                     )
-                    PositionCard(
-                        title = "Arquero",
-                        isSelected = selectedPosition == "Arquero",
-                        modifier = Modifier.weight(1f),
-                        onClick = { selectedPosition = "Arquero" }
-                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                // Grilla 2x2 de Posiciones
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        PositionCard(
+                            title = "Delantero",
+                            isSelected = selectedPosition == "Delantero",
+                            modifier = Modifier.weight(1f),
+                            onClick = { selectedPosition = "Delantero" }
+                        )
+                        PositionCard(
+                            title = "Mediocampista",
+                            isSelected = selectedPosition == "Mediocampista",
+                            modifier = Modifier.weight(1f),
+                            onClick = { selectedPosition = "Mediocampista" }
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        PositionCard(
+                            title = "Defensa",
+                            isSelected = selectedPosition == "Defensa",
+                            modifier = Modifier.weight(1f),
+                            onClick = { selectedPosition = "Defensa" }
+                        )
+                        PositionCard(
+                            title = "Arquero",
+                            isSelected = selectedPosition == "Arquero",
+                            modifier = Modifier.weight(1f),
+                            onClick = { selectedPosition = "Arquero" }
+                        )
+                    }
+                }
+            }
+
+            // 2. ROL: ADMINISTRADOR DE CANCHA -> Datos estrictos del Complejo Deportivo
+            if (selectedRole == UserRole.ADMIN_CANCHA) {
+                Surface(
+                    color = Color(0xFFFFF1F2),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.2.dp, Color(0xFFFECDD3)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("🏟️", fontSize = 18.sp)
+                            Spacer(Modifier.width(8.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    "DATOS DEL COMPLEJO DEPORTIVO",
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF991B1B)
+                                )
+                                Text(
+                                    "Información para verificar y listar tus canchas",
+                                    fontSize = 11.sp,
+                                    color = TextSecondary
+                                )
+                            }
+                            Surface(color = Color(0xFFFEE2E2), shape = RoundedCornerShape(6.dp)) {
+                                Text(
+                                    "OBLIGATORIO",
+                                    fontSize = 8.5.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = Color(0xFF991B1B),
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(Modifier.height(12.dp))
+
+                        // Nombre del Complejo
+                        FormLabel("NOMBRE DEL COMPLEJO / SEDE")
+                        OutlinedTextField(
+                            value = complexName,
+                            onValueChange = { complexName = it },
+                            placeholder = { Text("Ej: Complejo Deportivo El Oasis") },
+                            leadingIcon = { Icon(Icons.Outlined.Stadium, null, tint = Color(0xFF4B5563)) },
+                            modifier = Modifier.fillMaxWidth().testTag("court_complex_name_input"),
+                            shape = RoundedCornerShape(12.dp),
+                            singleLine = true,
+                            colors = outlinedColors()
+                        )
+
+                        Spacer(Modifier.height(10.dp))
+
+                        // Distrito en Chiclayo
+                        FormLabel("DISTRITO EN CHICLAYO")
+                        val chiclayoDistricts = listOf("Chiclayo Centro", "La Victoria", "Pimentel", "Patazca", "J. L. Ortiz")
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            chiclayoDistricts.take(3).forEach { dist ->
+                                val isSelected = selectedDistrict == dist
+                                Surface(
+                                    onClick = { selectedDistrict = dist },
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (isSelected) DarkForestGreen else Color.White,
+                                    border = BorderStroke(1.dp, if (isSelected) DarkForestGreen else BorderGray),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = dist,
+                                        fontSize = 10.5.sp,
+                                        fontWeight = if (isSelected) FontWeight.Black else FontWeight.Medium,
+                                        color = if (isSelected) LimeNeon else TextPrimary,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(vertical = 7.dp)
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            chiclayoDistricts.drop(3).forEach { dist ->
+                                val isSelected = selectedDistrict == dist
+                                Surface(
+                                    onClick = { selectedDistrict = dist },
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (isSelected) DarkForestGreen else Color.White,
+                                    border = BorderStroke(1.dp, if (isSelected) DarkForestGreen else BorderGray),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = dist,
+                                        fontSize = 10.5.sp,
+                                        fontWeight = if (isSelected) FontWeight.Black else FontWeight.Medium,
+                                        color = if (isSelected) LimeNeon else TextPrimary,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(vertical = 7.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(Modifier.height(10.dp))
+
+                        // Dirección exacta
+                        FormLabel("DIRECCIÓN EXACTA DE LA SEDE")
+                        OutlinedTextField(
+                            value = complexAddress,
+                            onValueChange = { complexAddress = it },
+                            placeholder = { Text("Ej: Av. Los Tréboles 450, Santa Victoria") },
+                            leadingIcon = { Icon(Icons.Outlined.LocationOn, null, tint = Color(0xFF4B5563)) },
+                            modifier = Modifier.fillMaxWidth().testTag("court_address_input"),
+                            shape = RoundedCornerShape(12.dp),
+                            singleLine = true,
+                            colors = outlinedColors()
+                        )
+
+                        Spacer(Modifier.height(10.dp))
+
+                        // RUC / DNI del Administrador
+                        FormLabel("RUC O DNI DEL TITULAR / ADMINISTRADOR")
+                        OutlinedTextField(
+                            value = complexRuc,
+                            onValueChange = { if (it.length <= 11 && it.all { c -> c.isDigit() }) complexRuc = it },
+                            placeholder = { Text("RUC 11 dígitos o DNI 8 dígitos") },
+                            leadingIcon = { Icon(Icons.Outlined.Badge, null, tint = Color(0xFF4B5563)) },
+                            modifier = Modifier.fillMaxWidth().testTag("court_ruc_input"),
+                            shape = RoundedCornerShape(12.dp),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            colors = outlinedColors()
+                        )
+
+                        Spacer(Modifier.height(10.dp))
+
+                        // Número de Canchas Sintéticas
+                        FormLabel("CANTIDAD DE CANCHAS SINTÉTICAS DISPONIBLES")
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            listOf(1, 2, 3, 4, 5).forEach { count ->
+                                val isSelected = courtCount == count
+                                Surface(
+                                    onClick = { courtCount = count },
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = if (isSelected) Color(0xFF991B1B) else Color.White,
+                                    border = BorderStroke(1.dp, if (isSelected) Color(0xFF991B1B) else BorderGray),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = if (count == 5) "5+" else "$count",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSelected) Color.White else TextPrimary,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(vertical = 8.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(Modifier.height(10.dp))
+
+                        // Formatos Habilitados
+                        FormLabel("FORMATOS QUE MANEJA TU COMPLEJO")
+                        val formatsList = listOf("Fútbol 5", "Fútbol 6", "Fútbol 7", "Fútbol 8", "Fútbol 11")
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            formatsList.forEach { fmt ->
+                                val isIncluded = selectedFormats.contains(fmt)
+                                Surface(
+                                    onClick = {
+                                        selectedFormats = if (isIncluded) {
+                                            if (selectedFormats.size > 1) selectedFormats - fmt else selectedFormats
+                                        } else {
+                                            selectedFormats + fmt
+                                        }
+                                    },
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (isIncluded) Color(0xFF991B1B) else Color.White,
+                                    border = BorderStroke(1.dp, if (isIncluded) Color(0xFF991B1B) else BorderGray),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = fmt.replace("Fútbol ", "F"),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isIncluded) Color.White else TextPrimary,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(vertical = 6.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 3. ROL: ÁRBITRO COLEGIADO -> Acreditación y tarifas CODAR Lambayeque
+            if (selectedRole == UserRole.ARBITRO) {
+                Surface(
+                    color = Color(0xFFFAF5FF),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.2.dp, Color(0xFFE9D5FF)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("⚖️", fontSize = 18.sp)
+                            Spacer(Modifier.width(8.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    "ACREDITACIÓN ARBITRAL CODAR",
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF6B21A8)
+                                )
+                                Text(
+                                    "Federación y tarifas para dirigir en Chiclayo",
+                                    fontSize = 11.sp,
+                                    color = TextSecondary
+                                )
+                            }
+                            Surface(color = Color(0xFFF3E8FF), shape = RoundedCornerShape(6.dp)) {
+                                Text(
+                                    "OFICIAL FPF",
+                                    fontSize = 8.5.sp,
+                                    fontWeight = FontWeight.Black,
+                                    color = Color(0xFF6B21A8),
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(Modifier.height(12.dp))
+
+                        // Nº Carnet / Licencia CODAR
+                        FormLabel("Nº DE CARNET / LICENCIA CODAR LAMBAYEQUE")
+                        OutlinedTextField(
+                            value = refereeLicense,
+                            onValueChange = { refereeLicense = it },
+                            placeholder = { Text("Ej: CODAR-LAMB-2025-0489") },
+                            leadingIcon = { Icon(Icons.Outlined.Badge, null, tint = Color(0xFF4B5563)) },
+                            modifier = Modifier.fillMaxWidth().testTag("referee_license_input"),
+                            shape = RoundedCornerShape(12.dp),
+                            singleLine = true,
+                            colors = outlinedColors()
+                        )
+
+                        Spacer(Modifier.height(10.dp))
+
+                        // Categoría Arbitral
+                        FormLabel("CATEGORÍA ARBITRAL FPF")
+                        val categories = listOf("Primera Categoría FPF", "Segunda Categoría", "Aspirante")
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            categories.forEach { cat ->
+                                val isSelected = refereeCategory == cat
+                                Surface(
+                                    onClick = { refereeCategory = cat },
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (isSelected) Color(0xFF6B21A8) else Color.White,
+                                    border = BorderStroke(1.dp, if (isSelected) Color(0xFF6B21A8) else BorderGray),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = cat.replace(" Categoría", "").replace(" FPF", ""),
+                                        fontSize = 11.sp,
+                                        fontWeight = if (isSelected) FontWeight.Black else FontWeight.Medium,
+                                        color = if (isSelected) Color.White else TextPrimary,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(vertical = 7.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(Modifier.height(10.dp))
+
+                        // Tarifa por Partido
+                        FormLabel("TARIFA POR PARTIDO (EN SOLES)")
+                        val fees = listOf(30.0, 35.0, 40.0, 50.0)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            fees.forEach { fee ->
+                                val isSelected = refereeFee == fee
+                                Surface(
+                                    onClick = { refereeFee = fee },
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = if (isSelected) Color(0xFF6B21A8) else Color.White,
+                                    border = BorderStroke(1.dp, if (isSelected) Color(0xFF6B21A8) else BorderGray),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = "S/ ${fee.toInt()}",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSelected) Color.White else TextPrimary,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(vertical = 8.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(Modifier.height(10.dp))
+
+                        // Especialidad
+                        FormLabel("ESPECIALIDAD DE PARTIDOS")
+                        val specialties = listOf("Fútbol 7 & 8 Grass Sintético", "Fútbol 6 Rápido", "Fútbol 11 Oficial")
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            specialties.forEach { spec ->
+                                val isSelected = refereeSpecialty == spec
+                                Surface(
+                                    onClick = { refereeSpecialty = spec },
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (isSelected) Color(0xFF6B21A8) else Color.White,
+                                    border = BorderStroke(1.dp, if (isSelected) Color(0xFF6B21A8) else BorderGray),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = spec,
+                                            fontSize = 11.5.sp,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (isSelected) Color.White else TextPrimary,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        if (isSelected) {
+                                            Text("✓", color = LimeNeon, fontWeight = FontWeight.Black)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = "ℹ️ Como colegiado, podrás dirigir partidos y además participar como jugador en pichangas cambiando a 'Modo Jugador' desde tu perfil.",
+                            fontSize = 10.5.sp,
+                            color = Color(0xFF6B21A8),
+                            lineHeight = 14.sp
+                        )
+                    }
                 }
             }
 
@@ -673,10 +1227,10 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
             confirmButton = {
                 Button(
                     onClick = { showRulesDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = ForestGreen),
+                    colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = Color.White),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Entendido", fontWeight = FontWeight.Bold)
+                    Text("Entendido", fontWeight = FontWeight.Bold, color = Color.White)
                 }
             },
             shape = RoundedCornerShape(20.dp),
@@ -718,10 +1272,10 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
             confirmButton = {
                 Button(
                     onClick = { showTermsDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = ForestGreen),
+                    colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = Color.White),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Aceptar", fontWeight = FontWeight.Bold)
+                    Text("Aceptar", fontWeight = FontWeight.Bold, color = Color.White)
                 }
             },
             shape = RoundedCornerShape(20.dp),
@@ -752,10 +1306,10 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
             confirmButton = {
                 Button(
                     onClick = { showHelpDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = ForestGreen),
+                    colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = Color.White),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("¡Listo!", fontWeight = FontWeight.Bold)
+                    Text("¡Listo!", fontWeight = FontWeight.Bold, color = Color.White)
                 }
             },
             shape = RoundedCornerShape(20.dp),
@@ -826,6 +1380,95 @@ private fun PositionCard(
                         .background(ForestGreen)
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun RoleSelectionCard(
+    role: UserRole,
+    title: String,
+    subtitle: String,
+    badge: String,
+    badgeColor: Color,
+    badgeTextColor: Color,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val containerBg = if (isSelected) Color(0xFFF0FDF4) else Color.White
+    val borderStroke = if (isSelected) BorderStroke(1.8.dp, DarkForestGreen) else BorderStroke(1.dp, BorderGray)
+
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        color = containerBg,
+        border = borderStroke
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .clip(CircleShape)
+                    .background(if (isSelected) LimeNeon else Color(0xFFF3F4F6)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = when (role) {
+                        UserRole.CAPITAN -> "👑"
+                        UserRole.JUGADOR_LIBRE -> "⚽"
+                        UserRole.ADMIN_CANCHA -> "🏟️"
+                        UserRole.ARBITRO -> "⚖️"
+                        else -> "👤"
+                    },
+                    fontSize = 18.sp
+                )
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = title,
+                        fontSize = 13.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isSelected) DarkForestGreen else TextPrimary
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Surface(color = badgeColor, shape = RoundedCornerShape(4.dp)) {
+                        Text(
+                            text = badge,
+                            fontSize = 8.5.sp,
+                            fontWeight = FontWeight.Black,
+                            color = badgeTextColor,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                        )
+                    }
+                }
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    fontSize = 11.sp,
+                    color = TextSecondary,
+                    lineHeight = 14.sp
+                )
+            }
+
+            RadioButton(
+                selected = isSelected,
+                onClick = onClick,
+                colors = RadioButtonDefaults.colors(
+                    selectedColor = DarkForestGreen,
+                    unselectedColor = Color(0xFF9CA3AF)
+                ),
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 }

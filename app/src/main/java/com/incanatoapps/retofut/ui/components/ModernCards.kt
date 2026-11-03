@@ -90,11 +90,11 @@ fun SoftMatchCard(
                 
                 Button(
                     onClick = { /* Join Logic */ },
-                    colors = ButtonDefaults.buttonColors(containerColor = BrandGreen),
+                    colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = Color.White),
                     shape = RoundedCornerShape(16.dp),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 2.dp)
                 ) {
-                    Text("Unirme", color = TextPrimary, fontWeight = FontWeight.Bold)
+                    Text("Unirme", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             }
         }

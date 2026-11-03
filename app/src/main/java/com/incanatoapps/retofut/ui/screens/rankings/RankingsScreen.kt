@@ -95,13 +95,22 @@ fun RankingsScreen(navController: NavHostController, viewModel: DashboardViewMod
         }
     }
 
-    LaunchedEffect(token) {
+    var selectedTab by remember { mutableIntStateOf(0) } // 0: Tabla, 1: Fixture, 2: Goleadores, 3: Mis Torneos
+
+    // Carga bajo demanda (On-Demand): Solo dispara la petición del tab activo
+    LaunchedEffect(selectedTab, token) {
         if (token != null && token != "expo_guest_token") {
-            viewModel.loadDashboardData(token)
+            when (selectedTab) {
+                0 -> viewModel.loadTeamsRanking(token) // Carga diferida de tabla
+                2 -> viewModel.loadPlayersRanking(token) // Carga diferida de goleadores
+            }
         }
     }
 
-    var selectedTab by remember { mutableIntStateOf(0) } // 0: Tabla, 1: Fixture, 2: Goleadores, 3: Mis Torneos
+    // Paginación y carga por partes para evitar renderizar listas masivas
+    var visibleStandingsCount by remember { mutableIntStateOf(5) }
+    var visibleFixturesCount by remember { mutableIntStateOf(3) }
+    var visibleScorersCount by remember { mutableIntStateOf(4) }
     var selectedTournament by remember { mutableStateOf("Copa Chiclayo F7 2026") }
     var showInscribeDialog by remember { mutableStateOf(false) }
     var selectedTeamToInscribe by remember { mutableStateOf("Los Galácticos FC") }
@@ -241,11 +250,11 @@ fun RankingsScreen(navController: NavHostController, viewModel: DashboardViewMod
                                     Toast.LENGTH_LONG
                                 ).show()
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = LimeNeon, contentColor = DarkForestGreen),
+                            colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = Color.White),
                             shape = RoundedCornerShape(14.dp),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Confirmar", fontWeight = FontWeight.Black)
+                            Text("Confirmar", fontWeight = FontWeight.Bold, color = Color.White)
                         }
                     }
                 }
@@ -413,15 +422,15 @@ fun RankingsScreen(navController: NavHostController, viewModel: DashboardViewMod
                         ) {
                             Button(
                                 onClick = { showInscribeDialog = true },
-                                colors = ButtonDefaults.buttonColors(containerColor = LimeNeon, contentColor = DarkForestGreen),
+                                colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = Color.White),
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(42.dp)
                             ) {
-                                Icon(Icons.Default.GroupAdd, null, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Default.GroupAdd, null, tint = Color.White, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(6.dp))
-                                Text("Inscribir mi Equipo", fontWeight = FontWeight.Black, fontSize = 12.sp)
+                                Text("Inscribir mi Equipo", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color.White)
                             }
 
                             OutlinedButton(
@@ -551,7 +560,7 @@ fun RankingsScreen(navController: NavHostController, viewModel: DashboardViewMod
                         }
                     }
 
-                    items(defaultStandings) { team ->
+                    items(defaultStandings.take(visibleStandingsCount), key = { it.id }) { team ->
                         val isUserTeam = team.name.contains("Galácticos")
                         Surface(
                             onClick = { navController.navigate("team_detail/${team.id}") },
@@ -661,6 +670,28 @@ fun RankingsScreen(navController: NavHostController, viewModel: DashboardViewMod
                         }
                     }
 
+                    if (visibleStandingsCount < defaultStandings.size) {
+                        item(key = "load_more_standings_btn") {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp, vertical = 6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                OutlinedButton(
+                                    onClick = { visibleStandingsCount = (visibleStandingsCount + 4).coerceAtMost(defaultStandings.size) },
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = BorderStroke(1.dp, ForestGreen.copy(alpha = 0.4f)),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkForestGreen)
+                                ) {
+                                    Icon(Icons.Default.ExpandMore, null, modifier = Modifier.size(16.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("Ver más posiciones (${defaultStandings.size - visibleStandingsCount} restantes)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+
                     item {
                         Surface(
                             color = Color(0xFFF9FAFB),
@@ -700,7 +731,7 @@ fun RankingsScreen(navController: NavHostController, viewModel: DashboardViewMod
                         )
                     }
 
-                    items(defaultFixtures) { fix ->
+                    items(defaultFixtures.take(visibleFixturesCount), key = { it.id }) { fix ->
                         Surface(
                             onClick = {
                                 if (fix.status == "EN VIVO") {
@@ -859,6 +890,28 @@ fun RankingsScreen(navController: NavHostController, viewModel: DashboardViewMod
                             }
                         }
                     }
+
+                    if (visibleFixturesCount < defaultFixtures.size) {
+                        item(key = "load_more_fixtures_btn") {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp, vertical = 6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                OutlinedButton(
+                                    onClick = { visibleFixturesCount = (visibleFixturesCount + 3).coerceAtMost(defaultFixtures.size) },
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = BorderStroke(1.dp, ForestGreen.copy(alpha = 0.4f)),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkForestGreen)
+                                ) {
+                                    Icon(Icons.Default.ExpandMore, null, modifier = Modifier.size(16.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("Cargar más partidos (${defaultFixtures.size - visibleFixturesCount} restantes)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
                 }
 
                 2 -> {
@@ -914,7 +967,7 @@ fun RankingsScreen(navController: NavHostController, viewModel: DashboardViewMod
                         )
                     }
 
-                    items(defaultScorers) { scorer ->
+                    items(defaultScorers.take(visibleScorersCount), key = { it.id }) { scorer ->
                         Surface(
                             onClick = { navController.navigate("player_card/${scorer.id}") },
                             shape = RoundedCornerShape(14.dp),
@@ -978,6 +1031,28 @@ fun RankingsScreen(navController: NavHostController, viewModel: DashboardViewMod
                                         fontSize = 10.sp,
                                         color = TextSecondary
                                     )
+                                }
+                            }
+                        }
+                    }
+
+                    if (visibleScorersCount < defaultScorers.size) {
+                        item(key = "load_more_scorers_btn") {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp, vertical = 6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                OutlinedButton(
+                                    onClick = { visibleScorersCount = (visibleScorersCount + 3).coerceAtMost(defaultScorers.size) },
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = BorderStroke(1.dp, ForestGreen.copy(alpha = 0.4f)),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = DarkForestGreen)
+                                ) {
+                                    Icon(Icons.Default.ExpandMore, null, modifier = Modifier.size(16.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("Ver más goleadores (${defaultScorers.size - visibleScorersCount} restantes)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -1051,13 +1126,13 @@ fun RankingsScreen(navController: NavHostController, viewModel: DashboardViewMod
                                     Spacer(Modifier.height(14.dp))
                                     Button(
                                         onClick = { navController.navigate("team_detail/1") },
-                                        colors = ButtonDefaults.buttonColors(containerColor = DarkForestGreen, contentColor = LimeNeon),
+                                        colors = ButtonDefaults.buttonColors(containerColor = DarkForestGreen, contentColor = Color.White),
                                         shape = RoundedCornerShape(12.dp),
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        Text("Administrar Equipo & Plantilla", fontWeight = FontWeight.Black)
+                                        Text("Administrar Equipo & Plantilla", fontWeight = FontWeight.Bold, color = Color.White)
                                         Spacer(Modifier.width(8.dp))
-                                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null, modifier = Modifier.size(16.dp))
+                                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = Color.White, modifier = Modifier.size(16.dp))
                                     }
                                 }
                             }

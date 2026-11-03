@@ -19,11 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,8 +50,11 @@ fun ResetPasswordScreen(navController: NavController, viewModel: AuthViewModel =
     val isSuccess = authState is AuthState.Success
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Image(
-            painter = painterResource(id = R.drawable.banner),
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(R.drawable.banner)
+                .crossfade(true)
+                .build(),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -214,12 +219,12 @@ fun ResetPasswordScreen(navController: NavController, viewModel: AuthViewModel =
                                     .height(56.dp),
                                 enabled = authState !is AuthState.Loading && email.isNotBlank() && code.length == 6 && password.isNotBlank(),
                                 shape = RoundedCornerShape(16.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = BrandGreen)
+                                colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = Color.White)
                             ) {
                                 if (authState is AuthState.Loading) {
-                                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = TextPrimary)
+                                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
                                 } else {
-                                    Text("ACTUALIZAR CONTRASEÑA", fontWeight = FontWeight.Bold, color = TextPrimary)
+                                    Text("ACTUALIZAR CONTRASEÑA", fontWeight = FontWeight.Bold, color = Color.White)
                                 }
                             }
                         }
@@ -257,9 +262,9 @@ fun ResetPasswordScreen(navController: NavController, viewModel: AuthViewModel =
                         },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = BrandGreen)
+                        colors = ButtonDefaults.buttonColors(containerColor = ForestGreen, contentColor = Color.White)
                     ) {
-                        Text("VOLVER AL INICIO DE SESIÓN", fontWeight = FontWeight.Bold, color = TextPrimary)
+                        Text("VOLVER AL INICIO DE SESIÓN", fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             }

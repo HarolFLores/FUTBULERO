@@ -30,10 +30,33 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object CreateMatch : Screen("create_match", "Crear Partido", Icons.Outlined.Add)
     object MatchDetail : Screen("match_detail/{matchId}", "Detalles del Partido", Icons.Outlined.SportsSoccer)
     object LiveMatch : Screen("live_match/{matchId}", "Marcador en Vivo", Icons.Outlined.SportsSoccer)
+
+    // Módulos: Gestión de Canchas y Sistema de Torneos
+    object CourtManagement : Screen("court_management", "Gestión de Canchas", Icons.Outlined.SportsSoccer)
+    object Tournaments : Screen("tournaments", "Torneos y Copas", Icons.Outlined.EmojiEvents)
+    object PlayerCard : Screen("player_card/{playerId}", "Ficha FIFA", Icons.Outlined.Badge) {
+        fun createRoute(playerId: Int) = "player_card/$playerId"
+    }
+    object Notifications : Screen("notifications", "Notificaciones", Icons.Outlined.Notifications)
+    object Payment : Screen("payment/{matchId}", "Pago de Cancha y Cuotas", Icons.Outlined.AccountBalanceWallet) {
+        fun createRoute(matchId: Int = 1) = "payment/$matchId"
+    }
+    object CourtReservation : Screen("court_reservation/{courtId}", "Reservar Canchas", Icons.Outlined.SportsSoccer) {
+        fun createRoute(courtId: Int = 1) = "court_reservation/$courtId"
+    }
+    object TeamChat : Screen("team_chat/{teamId}", "Chat del Plantel", Icons.Outlined.Chat) {
+        fun createRoute(teamId: Int = 1) = "team_chat/$teamId"
+    }
+    object PostMatchReview : Screen("post_match_review/{matchId}", "Acta y Calificación", Icons.Outlined.StarRate) {
+        fun createRoute(matchId: Int = 1) = "post_match_review/$matchId"
+    }
+    object RefereeDirectory : Screen("referee_directory", "Árbitros y Vocales", Icons.Outlined.Sports)
+    object BetsHub : Screen("bets_hub", "Quinielas y Apuestas", Icons.Outlined.MonetizationOn)
 }
 
 val bottomBarScreens = listOf(
     Screen.Home,
+    Screen.Tournaments,
     Screen.Rankings,
     Screen.Shop,
     Screen.Profile
@@ -41,6 +64,8 @@ val bottomBarScreens = listOf(
 
 val drawerScreens = listOf(
     Screen.Home,
+    Screen.Tournaments,
+    Screen.CourtManagement,
     Screen.MyTeam,
     Screen.Challenges,
     Screen.Rankings,
