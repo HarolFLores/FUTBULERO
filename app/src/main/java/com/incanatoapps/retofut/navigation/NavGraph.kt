@@ -49,6 +49,7 @@ import com.incanatoapps.retofut.ui.screens.courts.CourtReservationScreen
 import com.incanatoapps.retofut.ui.screens.matches.PostMatchReviewScreen
 import com.incanatoapps.retofut.ui.screens.matches.BetsHubScreen
 import com.incanatoapps.retofut.ui.screens.referees.RefereeDirectoryScreen
+import com.incanatoapps.retofut.ui.screens.referees.RefereePortalScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
@@ -230,6 +231,11 @@ fun NavGraph(navController: NavHostController) {
         // Directorio Oficial de Árbitros CODAR
         composable(Screen.RefereeDirectory.route) {
             RefereeDirectoryScreen(navController = navController)
+        }
+
+        // Portal Exclusivo del Árbitro CODAR
+        composable(Screen.RefereePortal.route) {
+            RefereePortalScreen(navController = navController)
         }
 
         // Quinielas y Apuestas de Pichangas Chiclayo

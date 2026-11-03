@@ -116,7 +116,16 @@ class SessionManager(context: Context) {
         address: String,
         ruc: String,
         courtsCount: Int,
-        formats: String
+        formats: String,
+        mapsUrl: String = "",
+        imageUri: String = "",
+        hasModularF11: Boolean = false,
+        priceDayF7: Double = 70.0,
+        priceNightF7: Double = 110.0,
+        priceDayF11: Double = 180.0,
+        priceNightF11: Double = 260.0,
+        specialVipCourtName: String = "",
+        specialVipPrice: Double = 0.0
     ) {
         prefs.edit()
             .putString("court_complex_name", complexName)
@@ -125,6 +134,15 @@ class SessionManager(context: Context) {
             .putString("court_ruc", ruc)
             .putInt("court_count", courtsCount)
             .putString("court_formats", formats)
+            .putString("court_maps_url", mapsUrl)
+            .putString("court_image_uri", imageUri)
+            .putBoolean("court_has_modular_f11", hasModularF11)
+            .putString("court_price_day_f7", priceDayF7.toString())
+            .putString("court_price_night_f7", priceNightF7.toString())
+            .putString("court_price_day_f11", priceDayF11.toString())
+            .putString("court_price_night_f11", priceNightF11.toString())
+            .putString("court_vip_name", specialVipCourtName)
+            .putString("court_vip_price", specialVipPrice.toString())
             .apply()
     }
 
@@ -134,6 +152,15 @@ class SessionManager(context: Context) {
     fun fetchComplexRuc(): String = prefs.getString("court_ruc", "20608765432") ?: "20608765432"
     fun fetchCourtsCount(): Int = prefs.getInt("court_count", 3)
     fun fetchCourtFormats(): String = prefs.getString("court_formats", "F5, F7, F8") ?: "F5, F7, F8"
+    fun fetchComplexMapsUrl(): String = prefs.getString("court_maps_url", "https://maps.google.com/?q=Complejo+Deportivo+El+Oasis+Chiclayo") ?: ""
+    fun fetchComplexImageUri(): String = prefs.getString("court_image_uri", "") ?: ""
+    fun fetchHasModularF11(): Boolean = prefs.getBoolean("court_has_modular_f11", true)
+    fun fetchPriceDayF7(): Double = prefs.getString("court_price_day_f7", "70.0")?.toDoubleOrNull() ?: 70.0
+    fun fetchPriceNightF7(): Double = prefs.getString("court_price_night_f7", "110.0")?.toDoubleOrNull() ?: 110.0
+    fun fetchPriceDayF11(): Double = prefs.getString("court_price_day_f11", "180.0")?.toDoubleOrNull() ?: 180.0
+    fun fetchPriceNightF11(): Double = prefs.getString("court_price_night_f11", "260.0")?.toDoubleOrNull() ?: 260.0
+    fun fetchSpecialVipCourtName(): String = prefs.getString("court_vip_name", "Cancha 1 Techada LED") ?: ""
+    fun fetchSpecialVipPrice(): Double = prefs.getString("court_vip_price", "130.0")?.toDoubleOrNull() ?: 0.0
 
     // --- Datos de Árbitro Colegiado ---
     fun saveRefereeDetails(
@@ -180,6 +207,50 @@ class SessionManager(context: Context) {
             .putBoolean("pending_cap_active", false)
             .apply()
     }
+
+    // --- Ficha de Jugador Extras ---
+    fun savePlayerFoot(foot: String) {
+        prefs.edit().putString("player_foot", foot).apply()
+    }
+    fun fetchPlayerFoot(): String = prefs.getString("player_foot", "Derecha") ?: "Derecha"
+
+    fun savePlayerNickname(nickname: String) {
+        prefs.edit().putString("player_nickname", nickname).apply()
+    }
+    fun fetchPlayerNickname(): String = prefs.getString("player_nickname", "") ?: ""
+
+    // --- Ajustes Operativos y Medios de Pago de Cancha ---
+    fun updateComplexRates(
+        dayF7: Double,
+        nightF7: Double,
+        hours: String = "08:00 AM — 23:30 PM",
+        yapePhone: String = "974-812-300",
+        plinPhone: String = "974-812-300"
+    ) {
+        prefs.edit()
+            .putString("court_price_day_f7", dayF7.toString())
+            .putString("court_price_night_f7", nightF7.toString())
+            .putString("court_operating_hours", hours)
+            .putString("court_yape_phone", yapePhone)
+            .putString("court_plin_phone", plinPhone)
+            .apply()
+    }
+
+    fun saveOperatingHours(hours: String) {
+        prefs.edit().putString("court_operating_hours", hours).apply()
+    }
+    fun fetchOperatingHours(): String = prefs.getString("court_operating_hours", "08:00 AM — 23:30 PM") ?: "08:00 AM — 23:30 PM"
+
+    fun savePaymentMethods(yapePhone: String, plinPhone: String, titular: String = "El Oasis SAC") {
+        prefs.edit()
+            .putString("court_yape_phone", yapePhone)
+            .putString("court_plin_phone", plinPhone)
+            .putString("court_payment_titular", titular)
+            .apply()
+    }
+    fun fetchYapePhone(): String = prefs.getString("court_yape_phone", "974-812-300") ?: "974-812-300"
+    fun fetchPlinPhone(): String = prefs.getString("court_plin_phone", "974-812-300") ?: "974-812-300"
+    fun fetchPaymentTitular(): String = prefs.getString("court_payment_titular", "El Oasis SAC") ?: "El Oasis SAC"
 
     fun clearAuthToken() {
         prefs.edit().clear().apply()

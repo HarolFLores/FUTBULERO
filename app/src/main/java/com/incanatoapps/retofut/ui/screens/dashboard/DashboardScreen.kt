@@ -83,6 +83,19 @@ fun DashboardScreen(navController: NavHostController, viewModel: DashboardViewMo
         }
     }
 
+    // Portal exclusivo para Dueño de Cancha (con sus 4 pestañas oficiales)
+    if (userRole == UserRole.ADMIN_CANCHA) {
+        val courtViewModel: com.incanatoapps.retofut.ui.screens.courts.CourtManagementViewModel = viewModel()
+        com.incanatoapps.retofut.ui.screens.courts.CourtManagementScreen(navController = navController, viewModel = courtViewModel)
+        return
+    }
+
+    // Portal exclusivo para Árbitro Oficial CODAR (con sus 4 pestañas oficiales)
+    if (userRole == UserRole.ARBITRO) {
+        com.incanatoapps.retofut.ui.screens.referees.RefereePortalScreen(navController = navController)
+        return
+    }
+
     val sampleMatches = remember {
         listOf(
             AvailableMatch(

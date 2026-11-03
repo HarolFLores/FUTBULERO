@@ -51,6 +51,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
         fun createRoute(matchId: Int = 1) = "post_match_review/$matchId"
     }
     object RefereeDirectory : Screen("referee_directory", "Árbitros y Vocales", Icons.Outlined.Sports)
+    object RefereePortal : Screen("referee_portal", "Panel Árbitro", Icons.Outlined.Sports)
     object BetsHub : Screen("bets_hub", "Quinielas y Apuestas", Icons.Outlined.MonetizationOn)
 }
 
