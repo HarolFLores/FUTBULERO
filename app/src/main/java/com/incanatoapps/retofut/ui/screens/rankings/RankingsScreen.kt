@@ -314,18 +314,17 @@ fun RankingsScreen(navController: NavHostController, viewModel: DashboardViewMod
                     // Botón inscribir
                     Surface(
                         onClick = { showInscribeDialog = true },
-                        color = Color(0xFFF0FDF4),
+                        color = ForestGreen,
                         shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, LimeNeon),
                         modifier = Modifier.testTag("inscribe_team_button")
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.Add, null, tint = DarkForestGreen, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Add, null, tint = Color.White, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(4.dp))
-                            Text("Inscribir", fontSize = 12.sp, fontWeight = FontWeight.Black, color = DarkForestGreen)
+                            Text("Inscribir", fontSize = 12.sp, fontWeight = FontWeight.Black, color = Color.White)
                         }
                     }
                 }
@@ -497,7 +496,7 @@ fun RankingsScreen(navController: NavHostController, viewModel: DashboardViewMod
                         Surface(
                             onClick = { selectedTab = index },
                             shape = RoundedCornerShape(12.dp),
-                            color = if (isSelected) LimeNeon else Color(0xFFF3F4F6),
+                            color = if (isSelected) ForestGreen else Color(0xFFF3F4F6),
                             modifier = Modifier
                                 .height(38.dp)
                                 .testTag("tournament_tab_$index")
@@ -515,7 +514,7 @@ fun RankingsScreen(navController: NavHostController, viewModel: DashboardViewMod
                                 Icon(
                                     icon,
                                     null,
-                                    tint = if (isSelected) DarkForestGreen else TextSecondary,
+                                    tint = if (isSelected) Color.White else TextSecondary,
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(Modifier.width(6.dp))
@@ -523,7 +522,7 @@ fun RankingsScreen(navController: NavHostController, viewModel: DashboardViewMod
                                     text = title,
                                     fontSize = 12.sp,
                                     fontWeight = if (isSelected) FontWeight.Black else FontWeight.SemiBold,
-                                    color = if (isSelected) DarkForestGreen else TextSecondary
+                                    color = if (isSelected) Color.White else TextSecondary
                                 )
                             }
                         }

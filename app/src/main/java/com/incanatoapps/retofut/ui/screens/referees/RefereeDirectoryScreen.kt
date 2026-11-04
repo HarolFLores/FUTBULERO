@@ -99,6 +99,19 @@ fun RefereeDirectoryScreen(
         )
     }
 
+    val filteredReferees = remember(searchQuery, selectedFilterIndex, referees) {
+        referees.filter { ref ->
+            val matchesQuery = searchQuery.isBlank() || ref.name.contains(searchQuery, ignoreCase = true) || ref.venueInfo.contains(searchQuery, ignoreCase = true)
+            val matchesFilter = when (selectedFilterIndex) {
+                1 -> ref.availabilityChip.contains("Hoy", ignoreCase = true)
+                2 -> ref.specialtyChip.contains("F7", ignoreCase = true) || ref.specialtyChip.contains("F8", ignoreCase = true)
+                3 -> ref.specialtyChip.contains("11", ignoreCase = true) || ref.categoryBadge.contains("FIFA", ignoreCase = true)
+                else -> true
+            }
+            matchesQuery && matchesFilter
+        }
+    }
+
     Scaffold(
         containerColor = Color(0xFFF9FAFB),
         topBar = {
@@ -279,8 +292,8 @@ fun RefereeDirectoryScreen(
                         Surface(
                             onClick = { selectedFilterIndex = idx },
                             shape = RoundedCornerShape(50),
-                            color = if (isSel) DarkForestGreen else Color.White,
-                            border = BorderStroke(1.dp, if (isSel) DarkForestGreen else BorderGray),
+                            color = if (isSel) ForestGreen else Color.White,
+                            border = BorderStroke(1.dp, if (isSel) ForestGreen else BorderGray),
                             modifier = Modifier.height(34.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 14.dp)) {
@@ -288,7 +301,7 @@ fun RefereeDirectoryScreen(
                                     text = filterTitle,
                                     fontSize = 11.5.sp,
                                     fontWeight = if (isSel) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSel) LimeNeon else TextPrimary
+                                    color = if (isSel) Color.White else TextPrimary
                                 )
                             }
                         }
@@ -314,7 +327,7 @@ fun RefereeDirectoryScreen(
                                 .background(ForestGreen),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Outlined.Sports, null, tint = LimeNeon, modifier = Modifier.size(24.dp))
+                            Icon(Icons.Outlined.Sports, null, tint = Color.White, modifier = Modifier.size(24.dp))
                         }
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
@@ -326,12 +339,12 @@ fun RefereeDirectoryScreen(
                                     color = Color.White
                                 )
                                 Spacer(Modifier.width(8.dp))
-                                Surface(color = LimeNeon, shape = RoundedCornerShape(50)) {
+                                Surface(color = ForestGreen, shape = RoundedCornerShape(50)) {
                                     Text(
                                         text = "100% Certificados",
                                         fontSize = 8.5.sp,
                                         fontWeight = FontWeight.Black,
-                                        color = DarkForestGreen,
+                                        color = Color.White,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                     )
                                 }
@@ -349,7 +362,7 @@ fun RefereeDirectoryScreen(
             }
 
             // 3. LISTA DE ÁRBITROS FEDERADOS
-            items(referees, key = { it.id }) { ref ->
+            items(filteredReferees, key = { it.id }) { ref ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
@@ -492,7 +505,7 @@ fun RefereeDirectoryScreen(
                                 navController.popBackStack()
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = DarkForestGreen,
+                                containerColor = ForestGreen,
                                 contentColor = Color.White
                             ),
                             shape = RoundedCornerShape(12.dp),
@@ -507,7 +520,7 @@ fun RefereeDirectoryScreen(
                                 color = Color.White
                             )
                             Spacer(Modifier.width(6.dp))
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = LimeNeon, modifier = Modifier.size(15.dp))
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = Color.White, modifier = Modifier.size(15.dp))
                         }
                     }
                 }

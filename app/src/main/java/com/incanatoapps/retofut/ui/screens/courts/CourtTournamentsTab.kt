@@ -13,7 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +34,15 @@ fun CourtTournamentsTab(
     onCreateTournamentClick: () -> Unit
 ) {
     val context = LocalContext.current
+    var tourneyFilter by remember { mutableStateOf("Todos") }
+
+    val displayedTournaments = remember(tourneyFilter, viewModel.venueTournaments.toList()) {
+        when (tourneyFilter) {
+            "En Juego" -> viewModel.venueTournaments.filter { it.statusLabel.contains("Juego", ignoreCase = true) }
+            "Inscripciones Abiertas" -> viewModel.venueTournaments.filter { it.quotaBadge != null || it.statusLabel.contains("Inscrip", ignoreCase = true) || it.statusLabel.contains("Abiert", ignoreCase = true) }
+            else -> viewModel.venueTournaments.toList()
+        }
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -67,19 +76,50 @@ fun CourtTournamentsTab(
                     onClick = onCreateTournamentClick,
                     shape = RoundedCornerShape(20.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = LimeNeon,
-                        contentColor = DarkForestGreen
+                        containerColor = ForestGreen,
+                        contentColor = Color.White
                     ),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
                     modifier = Modifier.height(38.dp).testTag("create_tourney_btn")
                 ) {
-                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(16.dp), tint = DarkForestGreen)
+                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
                     Spacer(Modifier.width(4.dp))
                     Text(
                         text = "Crear Torneo",
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.Black
+                        fontWeight = FontWeight.Black,
+                        color = Color.White
                     )
+                }
+            }
+        }
+
+        // ==========================================
+        // 1b. FILTER CHIPS
+        // ==========================================
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                listOf("Todos", "En Juego", "Inscripciones Abiertas").forEach { filterLabel ->
+                    val isSel = tourneyFilter == filterLabel
+                    Surface(
+                        onClick = { tourneyFilter = filterLabel },
+                        shape = RoundedCornerShape(16.dp),
+                        color = if (isSel) ForestGreen else Color.White,
+                        border = BorderStroke(1.dp, if (isSel) ForestGreen else BorderGray),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = filterLabel,
+                            fontSize = 10.sp,
+                            fontWeight = if (isSel) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSel) Color.White else TextPrimary,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            modifier = Modifier.padding(vertical = 7.dp, horizontal = 2.dp)
+                        )
+                    }
                 }
             }
         }
@@ -89,7 +129,7 @@ fun CourtTournamentsTab(
         // ==========================================
         item {
             val tourney1 = viewModel.venueTournaments.firstOrNull()
-            if (tourney1 != null) {
+            if (tourney1 != null && displayedTournaments.contains(tourney1)) {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(18.dp),
@@ -110,7 +150,7 @@ fun CourtTournamentsTab(
                                     modifier = Modifier.size(42.dp)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
-                                        Icon(Icons.Outlined.EmojiEvents, contentDescription = null, tint = DarkForestGreen, modifier = Modifier.size(22.dp))
+                                        Icon(Icons.Outlined.EmojiEvents, contentDescription = null, tint = ForestGreen, modifier = Modifier.size(22.dp))
                                     }
                                 }
                                 Spacer(Modifier.width(10.dp))
@@ -122,14 +162,14 @@ fun CourtTournamentsTab(
 
                             // Banner Status
                             Surface(
-                                color = DarkForestGreen,
+                                color = ForestGreen,
                                 shape = RoundedCornerShape(6.dp)
                             ) {
                                 Text(
                                     text = tourney1.statusLabel,
                                     fontSize = 8.sp,
                                     fontWeight = FontWeight.Black,
-                                    color = LimeNeon,
+                                    color = Color.White,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
                                 )
                             }
@@ -170,11 +210,11 @@ fun CourtTournamentsTab(
                                 modifier = Modifier.weight(1f).height(40.dp),
                                 shape = RoundedCornerShape(10.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFFE5E7EB),
-                                    contentColor = DarkForestGreen
+                                    containerColor = ForestGreen,
+                                    contentColor = Color.White
                                 )
                             ) {
-                                Text("Ver Fixture & Cruces", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text("Ver Fixture & Cruces", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
                             }
 
                             Surface(
@@ -187,11 +227,11 @@ fun CourtTournamentsTab(
                                     context.startActivity(Intent.createChooser(sendIntent, "Compartir Torneo"))
                                 },
                                 shape = RoundedCornerShape(10.dp),
-                                color = DarkForestGreen,
+                                color = ForestGreen,
                                 modifier = Modifier.size(40.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
-                                    Icon(Icons.Outlined.Share, contentDescription = "Compartir", tint = LimeNeon, modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Outlined.Share, contentDescription = "Compartir", tint = Color.White, modifier = Modifier.size(18.dp))
                                 }
                             }
                         }
@@ -205,7 +245,7 @@ fun CourtTournamentsTab(
         // ==========================================
         item {
             val tourney2 = viewModel.venueTournaments.getOrNull(1)
-            if (tourney2 != null) {
+            if (tourney2 != null && displayedTournaments.contains(tourney2)) {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(18.dp),
@@ -273,13 +313,13 @@ fun CourtTournamentsTab(
                             modifier = Modifier.fillMaxWidth().height(42.dp),
                             shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = DarkForestGreen,
+                                containerColor = ForestGreen,
                                 contentColor = Color.White
                             )
                         ) {
-                            Icon(Icons.Outlined.Assignment, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Outlined.Assignment, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
                             Spacer(Modifier.width(6.dp))
-                            Text("📋  Gestionar Cupos (5/8)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("📋  Gestionar Cupos (5/8)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
                     }
                 }

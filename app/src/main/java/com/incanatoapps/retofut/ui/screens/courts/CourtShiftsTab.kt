@@ -15,7 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +37,16 @@ fun CourtShiftsTab(
 ) {
     val context = LocalContext.current
     val visibleShifts = viewModel.getVisibleShifts()
+    var selectedStatusFilter by remember { mutableStateOf("Todos") }
+
+    val displayedShifts = remember(visibleShifts, selectedStatusFilter) {
+        when (selectedStatusFilter) {
+            "Libres" -> visibleShifts.filter { it.status == ShiftStatus.TURNO_LIBRE }
+            "Reservados" -> visibleShifts.filter { it.status == ShiftStatus.RESERVADO || it.status == ShiftStatus.EN_JUEGO }
+            "Por Validar" -> visibleShifts.filter { it.status == ShiftStatus.POR_VALIDAR }
+            else -> visibleShifts
+        }
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -113,16 +123,17 @@ fun CourtShiftsTab(
                             .testTag("create_relampago_btn"),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = LimeNeon,
-                            contentColor = DarkForestGreen
+                            containerColor = ForestGreen,
+                            contentColor = Color.White
                         )
                     ) {
-                        Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp), tint = DarkForestGreen)
+                        Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
                         Spacer(Modifier.width(6.dp))
                         Text(
                             text = "Crear Torneo Relámpago en mi Sede",
                             fontSize = 13.sp,
-                            fontWeight = FontWeight.Black
+                            fontWeight = FontWeight.Black,
+                            color = Color.White
                         )
                     }
                 }
@@ -341,8 +352,8 @@ fun CourtShiftsTab(
                     Surface(
                         onClick = { viewModel.selectedDay = dayLabel },
                         shape = RoundedCornerShape(20.dp),
-                        color = if (isSelected) DarkForestGreen else Color.White,
-                        border = BorderStroke(1.dp, if (isSelected) DarkForestGreen else BorderGray),
+                        color = if (isSelected) ForestGreen else Color.White,
+                        border = BorderStroke(1.dp, if (isSelected) ForestGreen else BorderGray),
                         modifier = Modifier.weight(1f)
                     ) {
                         Row(
@@ -355,7 +366,7 @@ fun CourtShiftsTab(
                                     modifier = Modifier
                                         .size(6.dp)
                                         .clip(CircleShape)
-                                        .background(LimeNeon)
+                                        .background(Color.White)
                                 )
                                 Spacer(Modifier.width(5.dp))
                             }
@@ -373,9 +384,39 @@ fun CourtShiftsTab(
         }
 
         // ==========================================
+        // 4b. STATUS FILTER CHIPS
+        // ==========================================
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                listOf("Todos", "Libres", "Reservados", "Por Validar").forEach { statusFilter ->
+                    val isSel = selectedStatusFilter == statusFilter
+                    Surface(
+                        onClick = { selectedStatusFilter = statusFilter },
+                        shape = RoundedCornerShape(14.dp),
+                        color = if (isSel) ForestGreen else Color.White,
+                        border = BorderStroke(1.dp, if (isSel) ForestGreen else BorderGray),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = statusFilter,
+                            fontSize = 10.5.sp,
+                            fontWeight = if (isSel) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSel) Color.White else TextPrimary,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(vertical = 6.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        // ==========================================
         // 5. SHIFT TIMELINE CARDS
         // ==========================================
-        items(visibleShifts, key = { it.id }) { shift ->
+        items(displayedShifts, key = { it.id }) { shift ->
             ShiftCard(
                 shift = shift,
                 onConfirmClick = {
@@ -484,11 +525,11 @@ fun CourtShiftsTab(
                                     modifier = Modifier.weight(1.8f).height(38.dp),
                                     shape = RoundedCornerShape(10.dp),
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = DarkForestGreen,
+                                        containerColor = ForestGreen,
                                         contentColor = Color.White
                                     )
                                 ) {
-                                    Text("✔ Validar ✔", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                                    Text("✔ Validar ✔", fontSize = 11.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
                                 }
 
                                 OutlinedButton(
@@ -550,15 +591,15 @@ fun ShiftCard(
                     Surface(
                         color = when (shift.status) {
                             ShiftStatus.RESERVADO -> DarkForestGreen
-                            ShiftStatus.POR_VALIDAR -> Color(0xFFFEF3C7)
-                            ShiftStatus.TURNO_LIBRE -> Color(0xFFDCFCE7)
+                            ShiftStatus.POR_VALIDAR -> Color(0xFFD97706)
+                            ShiftStatus.TURNO_LIBRE -> ForestGreen
                             ShiftStatus.EN_JUEGO -> DarkForestGreen
-                            ShiftStatus.BLOQUEADO -> Color(0xFFF3F4F6)
+                            ShiftStatus.BLOQUEADO -> Color(0xFF6B7280)
                         },
                         shape = RoundedCornerShape(6.dp)
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.5.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             if (shift.status == ShiftStatus.RESERVADO || shift.status == ShiftStatus.EN_JUEGO) {
@@ -566,7 +607,7 @@ fun ShiftCard(
                                     modifier = Modifier
                                         .size(5.dp)
                                         .clip(CircleShape)
-                                        .background(LimeNeon)
+                                        .background(Color.White)
                                 )
                                 Spacer(Modifier.width(4.dp))
                             }
@@ -574,13 +615,7 @@ fun ShiftCard(
                                 text = shift.status.label,
                                 fontSize = 8.5.sp,
                                 fontWeight = FontWeight.Black,
-                                color = when (shift.status) {
-                                    ShiftStatus.RESERVADO -> LimeNeon
-                                    ShiftStatus.POR_VALIDAR -> Color(0xFFB45309)
-                                    ShiftStatus.TURNO_LIBRE -> ForestGreen
-                                    ShiftStatus.EN_JUEGO -> LimeNeon
-                                    ShiftStatus.BLOQUEADO -> TextSecondary
-                                }
+                                color = Color.White
                             )
                         }
                     }
@@ -657,13 +692,13 @@ fun ShiftCard(
                             onClick = onConfirmClick,
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = DarkForestGreen,
+                                containerColor = ForestGreen,
                                 contentColor = Color.White
                             ),
                             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
                             modifier = Modifier.height(34.dp)
                         ) {
-                            Text("Confirmar", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text("Confirmar", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
                     }
                     ShiftStatus.TURNO_LIBRE -> {

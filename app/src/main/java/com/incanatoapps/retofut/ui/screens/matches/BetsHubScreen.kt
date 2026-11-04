@@ -231,8 +231,8 @@ fun BetsHubScreen(
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = LimeNeon,
-                                contentColor = DarkForestGreen
+                                containerColor = ForestGreen,
+                                contentColor = Color.White
                             ),
                             shape = RoundedCornerShape(12.dp),
                             contentPadding = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
@@ -242,10 +242,10 @@ fun BetsHubScreen(
                                 text = "Confirmar Apuesta",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Black,
-                                color = DarkForestGreen
+                                color = Color.White
                             )
                             Spacer(Modifier.width(4.dp))
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = DarkForestGreen, modifier = Modifier.size(15.dp))
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = Color.White, modifier = Modifier.size(15.dp))
                         }
                     }
 
@@ -381,8 +381,8 @@ fun BetsHubScreen(
                                     Toast.makeText(context, "Pozo de la jornada seleccionado", Toast.LENGTH_SHORT).show()
                                 },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = LimeNeon,
-                                    contentColor = DarkForestGreen
+                                    containerColor = ForestGreen,
+                                    contentColor = Color.White
                                 ),
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier
@@ -393,10 +393,10 @@ fun BetsHubScreen(
                                     text = "Apostar en el Pozo",
                                     fontSize = 13.5.sp,
                                     fontWeight = FontWeight.Black,
-                                    color = DarkForestGreen
+                                    color = Color.White
                                 )
                                 Spacer(Modifier.width(6.dp))
-                                Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = DarkForestGreen, modifier = Modifier.size(15.dp))
+                                Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = Color.White, modifier = Modifier.size(15.dp))
                             }
                         }
                     }

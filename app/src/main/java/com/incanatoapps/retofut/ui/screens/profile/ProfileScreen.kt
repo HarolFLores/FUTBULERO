@@ -417,15 +417,15 @@ fun ProfileScreen(navController: NavHostController, viewModel: ProfileViewModel 
 
                             // OVR Badge
                             Surface(
-                                color = LimeNeon,
+                                color = ForestGreen,
                                 shape = RoundedCornerShape(14.dp)
                             ) {
                                 Column(
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    Text("87", fontSize = 20.sp, fontWeight = FontWeight.Black, color = DarkForestGreen)
-                                    Text("OVR", fontSize = 9.sp, fontWeight = FontWeight.Black, color = DarkForestGreen)
+                                    Text("87", fontSize = 20.sp, fontWeight = FontWeight.Black, color = Color.White)
+                                    Text("OVR", fontSize = 9.sp, fontWeight = FontWeight.Black, color = Color.White)
                                 }
                             }
                         }

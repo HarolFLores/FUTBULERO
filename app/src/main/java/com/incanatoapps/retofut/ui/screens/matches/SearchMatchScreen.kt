@@ -282,9 +282,9 @@ fun SearchMatchScreen(navController: NavHostController) {
                     val isSelected = selectedFilter == filter
                     Surface(
                         onClick = { selectedFilter = filter },
-                        color = if (isSelected) LimeNeon else Color.White,
+                        color = if (isSelected) ForestGreen else Color.White,
                         shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, if (isSelected) LimeNeon else BorderGray)
+                        border = BorderStroke(1.dp, if (isSelected) ForestGreen else BorderGray)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
@@ -294,7 +294,7 @@ fun SearchMatchScreen(navController: NavHostController) {
                                 Icon(
                                     Icons.Outlined.CalendarToday,
                                     null,
-                                    tint = if (isSelected) DarkForestGreen else TextSecondary,
+                                    tint = if (isSelected) Color.White else TextSecondary,
                                     modifier = Modifier.size(14.dp)
                                 )
                                 Spacer(Modifier.width(6.dp))
@@ -303,7 +303,7 @@ fun SearchMatchScreen(navController: NavHostController) {
                                 text = filter,
                                 fontSize = 12.5.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) DarkForestGreen else TextPrimary
+                                color = if (isSelected) Color.White else TextPrimary
                             )
                         }
                     }

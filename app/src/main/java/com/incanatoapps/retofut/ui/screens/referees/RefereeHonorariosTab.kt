@@ -119,16 +119,17 @@ fun RefereeHonorariosTab(
                         modifier = Modifier.fillMaxWidth().height(46.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = LimeNeon,
-                            contentColor = DarkForestGreen
+                            containerColor = ForestGreen,
+                            contentColor = Color.White
                         )
                     ) {
-                        Icon(Icons.Outlined.Payments, contentDescription = null, tint = DarkForestGreen, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Outlined.Payments, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
                         Text(
                             text = "RETIRAR VÍA YAPE / TRANSFERENCIA",
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.Black
+                            fontWeight = FontWeight.Black,
+                            color = Color.White
                         )
                     }
                 }

@@ -178,11 +178,11 @@ private fun GuestTopBanner(
 
             Spacer(Modifier.width(8.dp))
 
-            // Botón verde Neón "CREAR CUENTA GRATIS 🚀"
+            // Botón verde "CREAR CUENTA GRATIS 🚀"
             Surface(
                 onClick = onCreateAccountClick,
                 shape = RoundedCornerShape(14.dp),
-                color = LimeNeon,
+                color = ForestGreen,
                 modifier = Modifier.testTag("guest_top_create_account_btn")
             ) {
                 Row(
@@ -193,7 +193,7 @@ private fun GuestTopBanner(
                         text = "CREAR CUENTA GRATIS",
                         fontSize = 9.5.sp,
                         fontWeight = FontWeight.Black,
-                        color = DarkForestGreen
+                        color = Color.White
                     )
                     Spacer(Modifier.width(3.dp))
                     Text("🚀", fontSize = 10.sp)

@@ -627,13 +627,13 @@ private fun DesignationCard(
                     modifier = Modifier.fillMaxWidth().height(42.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = LimeNeon,
-                        contentColor = DarkForestGreen
+                        containerColor = ForestGreen,
+                        contentColor = Color.White
                     )
                 ) {
-                    Icon(Icons.Outlined.Assignment, contentDescription = null, tint = DarkForestGreen, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Outlined.Assignment, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Abrir Acta Digital del Partido", fontSize = 12.sp, fontWeight = FontWeight.Black)
+                    Text("Abrir Acta Digital del Partido", fontSize = 12.sp, fontWeight = FontWeight.Black, color = Color.White)
                 }
             }
         }

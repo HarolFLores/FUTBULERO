@@ -214,17 +214,18 @@ fun GuestRestrictionModal(
                         .testTag("create_account_from_guest_modal_btn"),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = LimeNeon,
-                        contentColor = DarkForestGreen
+                        containerColor = ForestGreen,
+                        contentColor = Color.White
                     )
                 ) {
                     Text(
                         text = "Crear mi Cuenta en 3 pasos",
                         fontSize = 13.sp,
-                        fontWeight = FontWeight.Black
+                        fontWeight = FontWeight.Black,
+                        color = Color.White
                     )
                     Spacer(Modifier.width(6.dp))
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = DarkForestGreen, modifier = Modifier.size(16.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
                 }
 
                 Spacer(Modifier.height(10.dp))

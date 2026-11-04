@@ -234,13 +234,13 @@ fun DigitalMatchSheetDialog(
                     modifier = Modifier.fillMaxWidth().height(44.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = LimeNeon,
-                        contentColor = DarkForestGreen
+                        containerColor = ForestGreen,
+                        contentColor = Color.White
                     )
                 ) {
-                    Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = DarkForestGreen, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Firmar y Validar Acta CODAR", fontSize = 12.sp, fontWeight = FontWeight.Black)
+                    Text("Firmar y Validar Acta CODAR", fontSize = 12.sp, fontWeight = FontWeight.Black, color = Color.White)
                 }
 
                 Spacer(Modifier.height(6.dp))

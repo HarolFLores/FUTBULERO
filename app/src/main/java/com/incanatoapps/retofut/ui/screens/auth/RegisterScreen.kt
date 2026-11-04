@@ -1190,15 +1190,15 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                                                     Surface(
                                                         onClick = { selectedDistrict = dist },
                                                         shape = RoundedCornerShape(8.dp),
-                                                        color = if (isSelected) DarkForestGreen else Color(0xFFF9FAFB),
-                                                        border = BorderStroke(1.dp, if (isSelected) DarkForestGreen else BorderGray),
+                                                        color = if (isSelected) ForestGreen else Color(0xFFF9FAFB),
+                                                        border = BorderStroke(1.dp, if (isSelected) ForestGreen else BorderGray),
                                                         modifier = Modifier.weight(1f)
                                                     ) {
                                                         Text(
                                                             text = dist,
                                                             fontSize = 10.5.sp,
                                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                                            color = if (isSelected) LimeNeon else TextPrimary,
+                                                            color = if (isSelected) Color.White else TextPrimary,
                                                             textAlign = TextAlign.Center,
                                                             modifier = Modifier.padding(vertical = 7.dp)
                                                         )
@@ -1215,15 +1215,15 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                                                     Surface(
                                                         onClick = { selectedDistrict = dist },
                                                         shape = RoundedCornerShape(8.dp),
-                                                        color = if (isSelected) DarkForestGreen else Color(0xFFF9FAFB),
-                                                        border = BorderStroke(1.dp, if (isSelected) DarkForestGreen else BorderGray),
+                                                        color = if (isSelected) ForestGreen else Color(0xFFF9FAFB),
+                                                        border = BorderStroke(1.dp, if (isSelected) ForestGreen else BorderGray),
                                                         modifier = Modifier.weight(1f)
                                                     ) {
                                                         Text(
                                                             text = dist,
                                                             fontSize = 10.5.sp,
                                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                                            color = if (isSelected) LimeNeon else TextPrimary,
+                                                            color = if (isSelected) Color.White else TextPrimary,
                                                             textAlign = TextAlign.Center,
                                                             modifier = Modifier.padding(vertical = 7.dp)
                                                         )
@@ -1256,14 +1256,14 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                                             ) {
                                                 FormLabel("Enlace de Google Maps / Coordenadas")
                                                 Surface(
-                                                    color = LimeNeon,
+                                                    color = ForestGreen,
                                                     shape = RoundedCornerShape(6.dp)
                                                 ) {
                                                     Text(
                                                         text = "GPS RECOMENDADO",
                                                         fontSize = 8.5.sp,
                                                         fontWeight = FontWeight.Black,
-                                                        color = DarkForestGreen,
+                                                        color = Color.White,
                                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                                     )
                                                 }
@@ -1598,15 +1598,15 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                                                     Surface(
                                                         onClick = { courtCount = count },
                                                         shape = RoundedCornerShape(10.dp),
-                                                        color = if (isSelected) DarkForestGreen else Color(0xFFF9FAFB),
-                                                        border = BorderStroke(1.dp, if (isSelected) DarkForestGreen else BorderGray),
+                                                        color = if (isSelected) ForestGreen else Color(0xFFF9FAFB),
+                                                        border = BorderStroke(1.dp, if (isSelected) ForestGreen else BorderGray),
                                                         modifier = Modifier.weight(1f)
                                                     ) {
                                                         Text(
                                                             text = if (count == 5) "5+" else "$count",
                                                             fontSize = 13.sp,
                                                             fontWeight = FontWeight.Bold,
-                                                            color = if (isSelected) LimeNeon else TextPrimary,
+                                                            color = if (isSelected) Color.White else TextPrimary,
                                                             textAlign = TextAlign.Center,
                                                             modifier = Modifier.padding(vertical = 9.dp)
                                                         )
@@ -1625,8 +1625,8 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                                         Text("¿Campo F11 divisible en 2x F7?", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = DarkForestGreen)
                                                         Spacer(Modifier.width(6.dp))
-                                                        Surface(color = DarkForestGreen, shape = RoundedCornerShape(4.dp)) {
-                                                            Text("MODULAR", fontSize = 8.sp, fontWeight = FontWeight.Black, color = LimeNeon, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
+                                                        Surface(color = ForestGreen, shape = RoundedCornerShape(4.dp)) {
+                                                            Text("MODULAR", fontSize = 8.sp, fontWeight = FontWeight.Black, color = Color.White, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
                                                         }
                                                     }
                                                     Spacer(Modifier.height(2.dp))
@@ -1664,14 +1664,14 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                                                         verticalAlignment = Alignment.CenterVertically
                                                     ) {
                                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                            Text("CANCHA A (F7)", fontSize = 10.sp, fontWeight = FontWeight.Black, color = LimeNeon)
+                                                            Text("CANCHA A (F7)", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.White)
                                                             Text("25m x 45m", fontSize = 9.sp, color = Color.White.copy(alpha = 0.7f))
                                                         }
 
-                                                        Text("⇌", color = LimeNeon, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                                                        Text("⇌", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
 
                                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                            Text("CANCHA B (F7)", fontSize = 10.sp, fontWeight = FontWeight.Black, color = LimeNeon)
+                                                            Text("CANCHA B (F7)", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.White)
                                                             Text("25m x 45m", fontSize = 9.sp, color = Color.White.copy(alpha = 0.7f))
                                                         }
                                                     }
@@ -1765,14 +1765,14 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                                                             Surface(
                                                                 onClick = { priceDayF7 = fee },
                                                                 shape = RoundedCornerShape(8.dp),
-                                                                color = if (isSel) DarkForestGreen else Color.White,
+                                                                color = if (isSel) ForestGreen else Color.White,
                                                                 modifier = Modifier.weight(1f)
                                                             ) {
                                                                 Text(
                                                                     text = "S/ ${fee.toInt()}",
                                                                     fontSize = 11.5.sp,
                                                                     fontWeight = FontWeight.Bold,
-                                                                    color = if (isSel) LimeNeon else Color(0xFF78350F),
+                                                                    color = if (isSel) Color.White else Color(0xFF78350F),
                                                                     textAlign = TextAlign.Center,
                                                                     modifier = Modifier.padding(vertical = 6.dp)
                                                                 )
@@ -1817,8 +1817,8 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                                                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                                                     Text("Horario Nocturno", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = DarkForestGreen)
                                                                     Spacer(Modifier.width(4.dp))
-                                                                    Surface(color = LimeNeon, shape = RoundedCornerShape(4.dp)) {
-                                                                        Text("LED ON", fontSize = 7.5.sp, fontWeight = FontWeight.Black, color = DarkForestGreen, modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
+                                                                    Surface(color = ForestGreen, shape = RoundedCornerShape(4.dp)) {
+                                                                        Text("LED ON", fontSize = 7.5.sp, fontWeight = FontWeight.Black, color = Color.White, modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
                                                                     }
                                                                 }
                                                                 Text("18:00 a 23:00 hrs (Horario Prime)", fontSize = 10.sp, color = ForestGreen)
@@ -1839,14 +1839,14 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                                                             Surface(
                                                                 onClick = { priceNightF7 = fee },
                                                                 shape = RoundedCornerShape(8.dp),
-                                                                color = if (isSel) DarkForestGreen else Color.White,
+                                                                color = if (isSel) ForestGreen else Color.White,
                                                                 modifier = Modifier.weight(1f)
                                                             ) {
                                                                 Text(
                                                                     text = "S/ ${fee.toInt()}",
                                                                     fontSize = 11.5.sp,
                                                                     fontWeight = FontWeight.Bold,
-                                                                    color = if (isSel) LimeNeon else DarkForestGreen,
+                                                                    color = if (isSel) Color.White else DarkForestGreen,
                                                                     textAlign = TextAlign.Center,
                                                                     modifier = Modifier.padding(vertical = 6.dp)
                                                                 )
@@ -1871,7 +1871,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                                                     verticalAlignment = Alignment.CenterVertically
                                                 ) {
                                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                                        Icon(Icons.Outlined.Stadium, contentDescription = null, tint = LimeNeon, modifier = Modifier.size(24.dp))
+                                                        Icon(Icons.Outlined.Stadium, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
                                                         Spacer(Modifier.width(10.dp))
                                                         Column {
                                                             Text("TARIFA CAMPO F11 COMPLETO", fontSize = 11.5.sp, fontWeight = FontWeight.Black, color = Color.White)
@@ -1882,11 +1882,11 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                                                     Column(horizontalAlignment = Alignment.End) {
                                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                                             Text("Día: ", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))
-                                                            Text("S/ ${priceDayF11.toInt()}", fontSize = 14.sp, fontWeight = FontWeight.Black, color = LimeNeon)
+                                                            Text("S/ ${priceDayF11.toInt()}", fontSize = 14.sp, fontWeight = FontWeight.Black, color = Color.White)
                                                         }
                                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                                             Text("Noche LED: ", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))
-                                                            Text("S/ ${priceNightF11.toInt()}", fontSize = 14.sp, fontWeight = FontWeight.Black, color = LimeNeon)
+                                                            Text("S/ ${priceNightF11.toInt()}", fontSize = 14.sp, fontWeight = FontWeight.Black, color = Color.White)
                                                         }
                                                     }
                                                 }
@@ -1911,8 +1911,8 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                                                 verticalAlignment = Alignment.CenterVertically
                                             ) {
                                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                                    Surface(color = LimeNeon, shape = RoundedCornerShape(6.dp)) {
-                                                        Text("VIP", fontSize = 10.sp, fontWeight = FontWeight.Black, color = DarkForestGreen, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                                    Surface(color = ForestGreen, shape = RoundedCornerShape(6.dp)) {
+                                                        Text("VIP", fontSize = 10.sp, fontWeight = FontWeight.Black, color = Color.White, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                                                     }
                                                     Spacer(Modifier.width(8.dp))
                                                     Column {
@@ -1945,8 +1945,8 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                                                             horizontalArrangement = Arrangement.SpaceBetween,
                                                             verticalAlignment = Alignment.CenterVertically
                                                         ) {
-                                                            Surface(color = DarkForestGreen, shape = RoundedCornerShape(4.dp)) {
-                                                                Text("▲ TECHADA • LLUVIA CERO", fontSize = 8.sp, fontWeight = FontWeight.Black, color = LimeNeon, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                                                            Surface(color = ForestGreen, shape = RoundedCornerShape(4.dp)) {
+                                                                Text("▲ TECHADA • LLUVIA CERO", fontSize = 8.sp, fontWeight = FontWeight.Black, color = Color.White, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                                                             }
                                                             Text("Alta Demanda Invierno", fontSize = 9.sp, color = TextSecondary, fontWeight = FontWeight.Medium)
                                                         }
@@ -2219,15 +2219,15 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                                         .testTag("submit_register_button"),
                                     shape = RoundedCornerShape(14.dp),
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = LimeNeon,
-                                        contentColor = DarkForestGreen
+                                        containerColor = ForestGreen,
+                                        contentColor = Color.White
                                     ),
                                     enabled = authState !is AuthState.Loading
                                 ) {
                                     if (authState is AuthState.Loading) {
                                         CircularProgressIndicator(
                                             modifier = Modifier.size(20.dp),
-                                            color = DarkForestGreen,
+                                            color = Color.White,
                                             strokeWidth = 2.5.dp
                                         )
                                     } else {
@@ -2239,7 +2239,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel = view
                                                 text = "Crear Mi Cuenta",
                                                 fontWeight = FontWeight.Black,
                                                 fontSize = 15.sp,
-                                                color = DarkForestGreen
+                                                color = Color.White
                                             )
                                             Spacer(Modifier.width(6.dp))
                                             Text("🚀", fontSize = 16.sp)

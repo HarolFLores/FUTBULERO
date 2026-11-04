@@ -116,6 +116,14 @@ fun TournamentsScreen(
         )
     }
 
+    val filteredStandings = remember(selectedFilterCategory, standingsList) {
+        when (selectedFilterCategory) {
+            "Cerca de mí (Chiclayo)" -> standingsList.filter { it.district.contains("Centro") || it.district.contains("Patazca") || it.district.contains("Victoria") }
+            "Creados por mí" -> standingsList.filter { it.isCurrentUserTeam }
+            else -> standingsList
+        }
+    }
+
     val scorersList = remember {
         listOf(
             ScorerItem(1, "Piero Mendoza", "Atlético Chiclayo", 14, 10),
@@ -359,7 +367,7 @@ fun TournamentsScreen(
                             Surface(
                                 onClick = { selectedSubTab = idx },
                                 shape = RoundedCornerShape(50),
-                                color = if (isSelected) LimeNeon else Color.Transparent,
+                                color = if (isSelected) ForestGreen else Color.Transparent,
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(36.dp)
@@ -369,7 +377,7 @@ fun TournamentsScreen(
                                         text = title,
                                         fontSize = 13.sp,
                                         fontWeight = if (isSelected) FontWeight.Black else FontWeight.Bold,
-                                        color = if (isSelected) DarkForestGreen else TextSecondary
+                                        color = if (isSelected) Color.White else TextSecondary
                                     )
                                 }
                             }
@@ -392,8 +400,8 @@ fun TournamentsScreen(
                         Surface(
                             onClick = { selectedFilterCategory = filter },
                             shape = RoundedCornerShape(50),
-                            color = if (isSel) DarkForestGreen else Color.White,
-                            border = BorderStroke(1.dp, if (isSel) DarkForestGreen else BorderGray),
+                            color = if (isSel) ForestGreen else Color.White,
+                            border = BorderStroke(1.dp, if (isSel) ForestGreen else BorderGray),
                             modifier = Modifier.height(32.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 14.dp)) {
@@ -468,7 +476,7 @@ fun TournamentsScreen(
                                 Spacer(Modifier.height(4.dp))
 
                                 // Filas de Equipos
-                                standingsList.forEach { row ->
+                                filteredStandings.forEach { row ->
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -719,10 +727,10 @@ fun TournamentsScreen(
                                             modifier = Modifier
                                                 .size(38.dp)
                                                 .clip(CircleShape)
-                                                .background(LimeNeon),
+                                                .background(ForestGreen),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Text("SR", fontWeight = FontWeight.Black, fontSize = 12.sp, color = DarkForestGreen)
+                                            Text("SR", fontWeight = FontWeight.Black, fontSize = 12.sp, color = Color.White)
                                         }
                                     }
                                 }

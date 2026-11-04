@@ -121,16 +121,17 @@ fun CourtDetailModal(
                         .testTag("reserve_schedule_guest_btn"),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = LimeNeon,
-                        contentColor = DarkForestGreen
+                        containerColor = ForestGreen,
+                        contentColor = Color.White
                     )
                 ) {
-                    Icon(Icons.Outlined.CalendarMonth, contentDescription = null, tint = DarkForestGreen, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Outlined.CalendarMonth, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(
                         text = "📅  Reservar Horario (Requiere Cuenta)",
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.Black
+                        fontWeight = FontWeight.Black,
+                        color = Color.White
                     )
                 }
             }

@@ -636,14 +636,14 @@ private fun InfoAndRequestsTab(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Surface(color = LimeNeon, shape = RoundedCornerShape(50)) {
+                            Surface(color = ForestGreen, shape = RoundedCornerShape(50)) {
                                 Row(
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(DarkForestGreen))
+                                    Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color.White))
                                     Spacer(Modifier.width(6.dp))
-                                    Text("FÚTBOL 7 • OFICIAL", fontSize = 9.5.sp, fontWeight = FontWeight.Black, color = DarkForestGreen)
+                                    Text("FÚTBOL 7 • OFICIAL", fontSize = 9.5.sp, fontWeight = FontWeight.Black, color = Color.White)
                                 }
                             }
                             Surface(color = Color.White.copy(alpha = 0.9f), shape = RoundedCornerShape(50)) {

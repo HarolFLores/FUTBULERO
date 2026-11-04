@@ -59,8 +59,8 @@ fun GuestTournamentsTab(
                 pj = 3,
                 dg = "+4",
                 pts = 7,
-                badgeBg = Color(0xFF86EFAC),
-                badgeTextColor = DarkForestGreen
+                badgeBg = ForestGreen,
+                badgeTextColor = Color.White
             ),
             GuestTeamStanding(
                 pos = 3,
@@ -121,7 +121,7 @@ fun GuestTournamentsTab(
                     Surface(
                         onClick = onRestrictedActionClick,
                         shape = RoundedCornerShape(20.dp),
-                        color = LimeNeon,
+                        color = ForestGreen,
                         modifier = Modifier.testTag("inscribir_equipo_guest_btn")
                     ) {
                         Row(
@@ -131,7 +131,7 @@ fun GuestTournamentsTab(
                             Icon(
                                 Icons.Outlined.AddCircleOutline,
                                 contentDescription = null,
-                                tint = DarkForestGreen,
+                                tint = Color.White,
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(Modifier.width(4.dp))
@@ -139,7 +139,7 @@ fun GuestTournamentsTab(
                                 text = "Inscribir Equipo",
                                 fontSize = 10.5.sp,
                                 fontWeight = FontWeight.Black,
-                                color = DarkForestGreen
+                                color = Color.White
                             )
                             Spacer(Modifier.width(4.dp))
                             Text("🔒", fontSize = 10.sp)
@@ -167,13 +167,13 @@ fun GuestTournamentsTab(
                     ) {
                         Surface(
                             shape = RoundedCornerShape(12.dp),
-                            color = LimeNeon
+                            color = ForestGreen
                         ) {
                             Text(
                                 text = "FECHA 4 EN JUEGO",
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Black,
-                                color = DarkForestGreen,
+                                color = Color.White,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                             )
                         }
@@ -434,13 +434,13 @@ fun GuestTournamentsTab(
                                         text = "Inscribirme",
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Black,
-                                        color = DarkForestGreen
+                                        color = ForestGreen
                                     )
                                     Spacer(Modifier.width(4.dp))
                                     Icon(
                                         Icons.AutoMirrored.Filled.ArrowForward,
                                         contentDescription = null,
-                                        tint = DarkForestGreen,
+                                        tint = ForestGreen,
                                         modifier = Modifier.size(13.dp)
                                     )
                                 }

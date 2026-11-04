@@ -64,6 +64,7 @@ fun DashboardScreen(navController: NavHostController, viewModel: DashboardViewMo
     val userPosition = remember { sessionManager.fetchPreferredPosition() }
 
     var searchQuery by remember { mutableStateOf("") }
+    var selectedFormatFilter by remember { mutableStateOf("Todos") }
     var showMatchDetailsDialog by remember { mutableStateOf(false) }
     var selectedMatchForJoin by remember { mutableStateOf<AvailableMatch?>(null) }
     var showCreateMatchDialog by remember { mutableStateOf(false) }
@@ -137,12 +138,21 @@ fun DashboardScreen(navController: NavHostController, viewModel: DashboardViewMo
         )
     }
 
-    val filteredMatches = remember(searchQuery, sampleMatches) {
-        if (searchQuery.isBlank()) sampleMatches
-        else sampleMatches.filter {
-            it.title.contains(searchQuery, ignoreCase = true) ||
-                    it.location.contains(searchQuery, ignoreCase = true) ||
-                    it.format.contains(searchQuery, ignoreCase = true)
+    val filteredMatches = remember(searchQuery, selectedFormatFilter, sampleMatches) {
+        sampleMatches.filter { match ->
+            val matchesQuery = if (searchQuery.isBlank()) true else {
+                match.title.contains(searchQuery, ignoreCase = true) ||
+                        match.location.contains(searchQuery, ignoreCase = true) ||
+                        match.format.contains(searchQuery, ignoreCase = true)
+            }
+            val matchesFormat = when (selectedFormatFilter) {
+                "Fútbol 7" -> match.format.contains("7") || match.format.contains("F7", ignoreCase = true)
+                "Fútbol 6" -> match.format.contains("6") || match.format.contains("F6", ignoreCase = true)
+                "Fútbol 11" -> match.format.contains("11") || match.format.contains("F11", ignoreCase = true)
+                "Futsal" -> match.format.contains("Futsal", ignoreCase = true) || match.format.contains("5")
+                else -> true
+            }
+            matchesQuery && matchesFormat
         }
     }
 
@@ -458,8 +468,36 @@ fun DashboardScreen(navController: NavHostController, viewModel: DashboardViewMo
                 }
             }
 
+            // Chips de filtro por formato de pichanga
             item {
-                Spacer(Modifier.height(14.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    listOf("Todos", "Fútbol 7", "Fútbol 6", "Fútbol 11", "Futsal").forEach { fmt ->
+                        val isSel = selectedFormatFilter == fmt
+                        Surface(
+                            onClick = { selectedFormatFilter = fmt },
+                            shape = RoundedCornerShape(14.dp),
+                            color = if (isSel) ForestGreen else Color.White,
+                            border = BorderStroke(1.dp, if (isSel) ForestGreen else BorderGray)
+                        ) {
+                            Text(
+                                text = fmt,
+                                fontSize = 11.sp,
+                                fontWeight = if (isSel) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSel) Color.White else TextPrimary,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            item {
+                Spacer(Modifier.height(10.dp))
             }
 
             // --- 4. HERO CARD: PRÓXIMO PARTIDO ---
@@ -514,12 +552,12 @@ fun DashboardScreen(navController: NavHostController, viewModel: DashboardViewMo
                                 }
 
                                 Surface(
-                                    color = LimeNeon,
+                                    color = ForestGreen,
                                     shape = RoundedCornerShape(50)
                                 ) {
                                     Text(
                                         text = "INSCRITO • TITULAR",
-                                        color = DarkForestGreen,
+                                        color = Color.White,
                                         fontWeight = FontWeight.ExtraBold,
                                         fontSize = 10.sp,
                                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
@@ -700,16 +738,16 @@ fun DashboardScreen(navController: NavHostController, viewModel: DashboardViewMo
                         }
 
                         Surface(
-                            color = Color(0xFFDCFCE7),
+                            color = ForestGreen,
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text("Ver en vivo", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = DarkForestGreen)
+                                Text("Ver en vivo", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
                                 Spacer(Modifier.width(2.dp))
-                                Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = DarkForestGreen, modifier = Modifier.size(12.dp))
+                                Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = Color.White, modifier = Modifier.size(12.dp))
                             }
                         }
                     }

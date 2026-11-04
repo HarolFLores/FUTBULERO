@@ -237,10 +237,10 @@ fun PlayerCardScreen(
                         ) {
                             Column {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Surface(color = LimeNeon, shape = RoundedCornerShape(6.dp)) {
+                                    Surface(color = ForestGreen, shape = RoundedCornerShape(6.dp)) {
                                         Text(
                                             "NIVEL ${viewModel.playerLevel}",
-                                            color = DarkForestGreen,
+                                            color = Color.White,
                                             fontWeight = FontWeight.Black,
                                             fontSize = 11.sp,
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)

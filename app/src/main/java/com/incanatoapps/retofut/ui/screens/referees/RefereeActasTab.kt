@@ -83,15 +83,15 @@ fun RefereeActasTab(
                     Surface(
                         onClick = { viewModel.actasFilter = filterLabel },
                         shape = RoundedCornerShape(16.dp),
-                        color = if (isSelected) DarkForestGreen else Color.White,
-                        border = BorderStroke(1.dp, if (isSelected) DarkForestGreen else BorderGray),
+                        color = if (isSelected) ForestGreen else Color.White,
+                        border = BorderStroke(1.dp, if (isSelected) ForestGreen else BorderGray),
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
                             text = filterLabel,
                             fontSize = 9.5.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) LimeNeon else TextPrimary,
+                            color = if (isSelected) Color.White else TextPrimary,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                             maxLines = 1,
                             modifier = Modifier.padding(vertical = 7.dp, horizontal = 2.dp)

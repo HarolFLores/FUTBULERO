@@ -21,6 +21,28 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.incanatoapps.retofut.ui.theme.*
 
+data class GuestMatchData(
+    val id: String,
+    val zone: String,
+    val dateGroup: String,
+    val quotaPillText: String,
+    val quotaPillBg: Color,
+    val quotaPillColor: Color,
+    val formatLocation: String,
+    val price: String,
+    val timeTag: String,
+    val isTimeTagDark: Boolean,
+    val title: String,
+    val address: String,
+    val complexName: String,
+    val complexDescription: String,
+    val avatars: List<String>,
+    val levelBadge: String,
+    val extraBadge: String,
+    val isExtraBadgeGreen: Boolean,
+    val actionButtonText: String
+)
+
 @Composable
 fun GuestMatchTab(
     onViewCourtClick: (String, String) -> Unit,
@@ -29,6 +51,112 @@ fun GuestMatchTab(
     var selectedZone by remember { mutableStateOf("Todas las Zonas") }
     var selectedDate by remember { mutableStateOf("Hoy (Viernes)") }
     var isListView by remember { mutableStateOf(true) }
+
+    val allMatches = remember {
+        listOf(
+            GuestMatchData(
+                id = "m1",
+                zone = "Santa Victoria",
+                dateGroup = "Hoy (Viernes)",
+                quotaPillText = "Faltan 2 Cupos",
+                quotaPillBg = Color(0xFFFEE2E2),
+                quotaPillColor = Color(0xFF991B1B),
+                formatLocation = "Santa Victoria • F7 Sintético",
+                price = "S/ 12.00",
+                timeTag = "HOY 20:30",
+                isTimeTagDark = true,
+                title = "Pichanga Nocturna Complejo El Oasis",
+                address = "📍 Cancha 2 Sintético • Santa Victoria, Chiclayo",
+                complexName = "Complejo Deportivo El Oasis",
+                complexDescription = "Calle Los Sauces 312, Urb. Santa Victoria • 3 canchas techadas con césped monofilamento y camerinos.",
+                avatars = listOf("C", "L", "+8"),
+                levelBadge = "Nivel Intermedio",
+                extraBadge = "Yape / Plin Aceptado",
+                isExtraBadgeGreen = true,
+                actionButtonText = "Inscribirse"
+            ),
+            GuestMatchData(
+                id = "m2",
+                zone = "Todas las Zonas",
+                dateGroup = "Hoy (Viernes)",
+                quotaPillText = "Falta Arquero + 1 Def",
+                quotaPillBg = Color(0xFFFEE2E2),
+                quotaPillColor = Color(0xFF991B1B),
+                formatLocation = "Patazca • Fútbol 6",
+                price = "S/ 10.00",
+                timeTag = "HOY 21:30",
+                isTimeTagDark = true,
+                title = "Reto Libre Canchas Patazca",
+                address = "📍 Av. José Leonardo Ortiz 840, Urb. Patazca",
+                complexName = "Canchas Deportivas Patazca",
+                complexDescription = "Av. José Leonardo Ortiz 840, Urb. Patazca • 2 canchas de Fútbol 6 sintético con iluminación LED.",
+                avatars = listOf("D", "J", "+7"),
+                levelBadge = "Nivel Competitivo",
+                extraBadge = "⏱ Últimos 30 min",
+                isExtraBadgeGreen = false,
+                actionButtonText = "Unirme"
+            ),
+            GuestMatchData(
+                id = "m3",
+                zone = "La Victoria",
+                dateGroup = "Fin de semana",
+                quotaPillText = "Falta 1 Cupo",
+                quotaPillBg = Color(0xFFDCFCE7),
+                quotaPillColor = ForestGreen,
+                formatLocation = "La Victoria • F7 Césped Natural",
+                price = "S/ 15.00",
+                timeTag = "SÁB 19:00",
+                isTimeTagDark = false,
+                title = "Pichanga Amigos La Victoria",
+                address = "📍 Complejo El Triunfo, Av. Víctor Raúl Haya de la Torre",
+                complexName = "Complejo El Triunfo (La Victoria)",
+                complexDescription = "Av. Víctor Raúl Haya de la Torre, La Victoria • Cancha de césped natural con estacionamiento y cafetería.",
+                avatars = listOf("M", "+11"),
+                levelBadge = "Nivel Recreativo / Amistoso",
+                extraBadge = "Tercer Tiempo Incluido 🍻",
+                isExtraBadgeGreen = true,
+                actionButtonText = "Inscribirme"
+            ),
+            GuestMatchData(
+                id = "m4",
+                zone = "Santa Victoria",
+                dateGroup = "Mañana",
+                quotaPillText = "3 Cupos Libres",
+                quotaPillBg = Color(0xFFFEF3C7),
+                quotaPillColor = Color(0xFFB45309),
+                formatLocation = "Santa Victoria • F7 Sintético",
+                price = "S/ 11.00",
+                timeTag = "MAÑ 18:00",
+                isTimeTagDark = true,
+                title = "Clásico Sabatino Santa Victoria",
+                address = "📍 Cancha 1 Techada • Santa Victoria, Chiclayo",
+                complexName = "Complejo Deportivo El Oasis",
+                complexDescription = "Calle Los Sauces 312, Urb. Santa Victoria • 3 canchas techadas con césped monofilamento y camerinos.",
+                avatars = listOf("P", "R", "+6"),
+                levelBadge = "Nivel Intermedio",
+                extraBadge = "Yape Aceptado",
+                isExtraBadgeGreen = true,
+                actionButtonText = "Inscribirse"
+            )
+        )
+    }
+
+    val filteredMatches = remember(selectedZone, selectedDate, allMatches) {
+        allMatches.filter { match ->
+            val zoneMatches = when (selectedZone) {
+                "Santa Victoria" -> match.zone == "Santa Victoria"
+                "La Victoria" -> match.zone == "La Victoria"
+                else -> true
+            }
+            val dateMatches = when (selectedDate) {
+                "Hoy (Viernes)" -> match.dateGroup == "Hoy (Viernes)"
+                "Mañana" -> match.dateGroup == "Mañana"
+                "Fin de semana" -> match.dateGroup == "Fin de semana"
+                else -> true
+            }
+            zoneMatches && dateMatches
+        }
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -60,30 +188,30 @@ fun GuestMatchTab(
                         Surface(
                             onClick = { isListView = true },
                             shape = RoundedCornerShape(16.dp),
-                            color = if (isListView) DarkForestGreen else Color.Transparent
+                            color = if (isListView) ForestGreen else Color.Transparent
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(Icons.Outlined.List, contentDescription = null, tint = if (isListView) LimeNeon else TextSecondary, modifier = Modifier.size(14.dp))
+                                Icon(Icons.Outlined.List, contentDescription = null, tint = if (isListView) Color.White else TextSecondary, modifier = Modifier.size(14.dp))
                                 Spacer(Modifier.width(4.dp))
-                                Text("Lista", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = if (isListView) LimeNeon else TextSecondary)
+                                Text("Lista", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = if (isListView) Color.White else TextSecondary)
                             }
                         }
 
                         Surface(
                             onClick = { isListView = false },
                             shape = RoundedCornerShape(16.dp),
-                            color = if (!isListView) DarkForestGreen else Color.Transparent
+                            color = if (!isListView) ForestGreen else Color.Transparent
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(Icons.Outlined.Map, contentDescription = null, tint = if (!isListView) LimeNeon else TextSecondary, modifier = Modifier.size(14.dp))
+                                Icon(Icons.Outlined.Map, contentDescription = null, tint = if (!isListView) Color.White else TextSecondary, modifier = Modifier.size(14.dp))
                                 Spacer(Modifier.width(4.dp))
-                                Text("Mapa", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = if (!isListView) LimeNeon else TextSecondary)
+                                Text("Mapa", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = if (!isListView) Color.White else TextSecondary)
                             }
                         }
                     }
@@ -104,8 +232,8 @@ fun GuestMatchTab(
                     Surface(
                         onClick = { selectedZone = zone },
                         shape = RoundedCornerShape(16.dp),
-                        color = if (isSel) DarkForestGreen else Color(0xFFF3F4F6),
-                        border = BorderStroke(1.dp, if (isSel) DarkForestGreen else BorderGray),
+                        color = if (isSel) ForestGreen else Color(0xFFF3F4F6),
+                        border = BorderStroke(1.dp, if (isSel) ForestGreen else BorderGray),
                         modifier = Modifier.weight(1f)
                     ) {
                         Row(
@@ -114,7 +242,7 @@ fun GuestMatchTab(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             if (isSel) {
-                                Box(modifier = Modifier.size(5.dp).clip(CircleShape).background(LimeNeon))
+                                Box(modifier = Modifier.size(5.dp).clip(CircleShape).background(Color.White))
                                 Spacer(Modifier.width(4.dp))
                             }
                             Text(
@@ -146,14 +274,14 @@ fun GuestMatchTab(
                     Surface(
                         onClick = { selectedDate = dateLabel },
                         shape = RoundedCornerShape(16.dp),
-                        color = if (isSel) Color(0xFFDCFCE7) else Color.White,
-                        border = BorderStroke(1.dp, if (isSel) Color(0xFF86EFAC) else BorderGray)
+                        color = if (isSel) ForestGreen else Color.White,
+                        border = BorderStroke(1.dp, if (isSel) ForestGreen else BorderGray)
                     ) {
                         Text(
                             text = dateLabel,
                             fontSize = 10.5.sp,
                             fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSel) DarkForestGreen else TextSecondary,
+                            color = if (isSel) Color.White else TextSecondary,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                         )
                     }
@@ -174,15 +302,15 @@ fun GuestMatchTab(
                     Text("Pichangas Disponibles", fontSize = 14.5.sp, fontWeight = FontWeight.Black, color = DarkForestGreen)
                     Spacer(Modifier.width(6.dp))
                     Surface(
-                        color = LimeNeon,
+                        color = ForestGreen,
                         shape = RoundedCornerShape(10.dp)
                     ) {
                         Text(
-                            text = "3 abiertas",
+                            text = "${filteredMatches.size} abiertas",
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Black,
-                            color = DarkForestGreen,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
                         )
                     }
                 }
@@ -192,90 +320,95 @@ fun GuestMatchTab(
         }
 
         // ==========================================
-        // 5. MATCH CARD 1: PICHANGA NOCTURNA EL OASIS
+        // 5. LIST VIEW vs MAP VIEW
         // ==========================================
-        item {
-            GuestMatchCard(
-                quotaPillText = "Faltan 2 Cupos",
-                quotaPillBg = Color(0xFFFEE2E2),
-                quotaPillColor = Color(0xFF991B1B),
-                formatLocation = "Santa Victoria • F7 Sintético",
-                price = "S/ 12.00",
-                timeTag = "HOY 20:30",
-                isTimeTagDark = true,
-                title = "Pichanga Nocturna Complejo El Oasis",
-                address = "📍 Cancha 2 Sintético • Santa Victoria, Chiclayo",
-                avatars = listOf("C", "L", "+8"),
-                levelBadge = "Nivel Intermedio",
-                extraBadge = "Yape / Plin Aceptado",
-                isExtraBadgeGreen = true,
-                actionButtonText = "Inscribirse",
-                onViewCourt = {
-                    onViewCourtClick(
-                        "Complejo Deportivo El Oasis",
-                        "Calle Los Sauces 312, Urb. Santa Victoria • 3 canchas techadas con césped monofilamento y camerinos."
-                    )
-                },
-                onAction = onRestrictedActionClick
-            )
+        if (!isListView) {
+            item {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color.White,
+                    border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
+                    shadowElevation = 1.dp
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Outlined.Map, contentDescription = null, tint = ForestGreen, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Mapa de Sedes y Canchas en Chiclayo", fontSize = 13.sp, fontWeight = FontWeight.Black, color = DarkForestGreen)
+                        }
+                        Spacer(Modifier.height(10.dp))
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(160.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFFDCFCE7),
+                            border = BorderStroke(1.dp, Color(0xFF86EFAC))
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxSize().padding(14.dp),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text("📍 Complejo Deportivo El Oasis (Santa Victoria)", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = DarkForestGreen)
+                                Spacer(Modifier.height(4.dp))
+                                Text("📍 Canchas Deportivas Patazca (Av. J.L. Ortiz)", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = DarkForestGreen)
+                                Spacer(Modifier.height(4.dp))
+                                Text("📍 Complejo El Triunfo (La Victoria)", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = DarkForestGreen)
+                                Spacer(Modifier.height(10.dp))
+                                Text("Geolocalización GPS activa en Chiclayo", fontSize = 10.5.sp, color = ForestGreen, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        // ==========================================
-        // 6. MATCH CARD 2: RETO LIBRE PATAZCA
-        // ==========================================
-        item {
-            GuestMatchCard(
-                quotaPillText = "Falta Arquero + 1 Def",
-                quotaPillBg = Color(0xFFFEE2E2),
-                quotaPillColor = Color(0xFF991B1B),
-                formatLocation = "Patazca • Fútbol 6",
-                price = "S/ 10.00",
-                timeTag = "HOY 21:30",
-                isTimeTagDark = true,
-                title = "Reto Libre Canchas Patazca",
-                address = "📍 Av. José Leonardo Ortiz 840, Urb. Patazca",
-                avatars = listOf("D", "J", "+7"),
-                levelBadge = "Nivel Competitivo",
-                extraBadge = "⏱ Últimos 30 min",
-                isExtraBadgeGreen = false,
-                actionButtonText = "Unirme",
-                onViewCourt = {
-                    onViewCourtClick(
-                        "Canchas Deportivas Patazca",
-                        "Av. José Leonardo Ortiz 840, Urb. Patazca • 2 canchas de Fútbol 6 sintético con iluminación LED."
-                    )
-                },
-                onAction = onRestrictedActionClick
-            )
-        }
-
-        // ==========================================
-        // 7. MATCH CARD 3: PICHANGA AMIGOS LA VICTORIA
-        // ==========================================
-        item {
-            GuestMatchCard(
-                quotaPillText = "Falta 1 Cupo",
-                quotaPillBg = Color(0xFFDCFCE7),
-                quotaPillColor = ForestGreen,
-                formatLocation = "La Victoria • F7 Césped Natural",
-                price = "S/ 15.00",
-                timeTag = "SÁB 19:00",
-                isTimeTagDark = false,
-                title = "Pichanga Amigos La Victoria",
-                address = "📍 Complejo El Triunfo, Av. Víctor Raúl Haya de la Torre",
-                avatars = listOf("M", "+11"),
-                levelBadge = "Nivel Recreativo / Amistoso",
-                extraBadge = "Tercer Tiempo Incluido 🍻",
-                isExtraBadgeGreen = true,
-                actionButtonText = "Inscribirme",
-                onViewCourt = {
-                    onViewCourtClick(
-                        "Complejo El Triunfo (La Victoria)",
-                        "Av. Víctor Raúl Haya de la Torre, La Victoria • Cancha de césped natural con estacionamiento y cafetería."
-                    )
-                },
-                onAction = onRestrictedActionClick
-            )
+        if (filteredMatches.isEmpty()) {
+            item {
+                Surface(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color.White,
+                    border = BorderStroke(1.dp, Color(0xFFE5E7EB))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(Icons.Outlined.SearchOff, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(32.dp))
+                        Spacer(Modifier.height(8.dp))
+                        Text("No hay pichangas para los filtros seleccionados", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextSecondary)
+                        Spacer(Modifier.height(4.dp))
+                        Text("Prueba cambiando la zona o la fecha", fontSize = 10.5.sp, color = TextSecondary)
+                    }
+                }
+            }
+        } else {
+            items(filteredMatches.size, key = { filteredMatches[it].id }) { idx ->
+                val m = filteredMatches[idx]
+                GuestMatchCard(
+                    quotaPillText = m.quotaPillText,
+                    quotaPillBg = m.quotaPillBg,
+                    quotaPillColor = m.quotaPillColor,
+                    formatLocation = m.formatLocation,
+                    price = m.price,
+                    timeTag = m.timeTag,
+                    isTimeTagDark = m.isTimeTagDark,
+                    title = m.title,
+                    address = m.address,
+                    avatars = m.avatars,
+                    levelBadge = m.levelBadge,
+                    extraBadge = m.extraBadge,
+                    isExtraBadgeGreen = m.isExtraBadgeGreen,
+                    actionButtonText = m.actionButtonText,
+                    onViewCourt = {
+                        onViewCourtClick(m.complexName, m.complexDescription)
+                    },
+                    onAction = onRestrictedActionClick
+                )
+            }
         }
     }
 }

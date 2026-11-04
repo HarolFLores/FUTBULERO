@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.incanatoapps.retofut.ui.theme.DarkForestGreen
+import com.incanatoapps.retofut.ui.theme.ForestGreen
 import com.incanatoapps.retofut.ui.theme.LimeNeon
 
 data class PitchPlayer(
@@ -107,7 +108,7 @@ fun SoccerPitch2D(
                     Surface(
                         onClick = { viewMode = mode },
                         shape = RoundedCornerShape(8.dp),
-                        color = if (isSelected) LimeNeon else Color(0xFF14532D),
+                        color = if (isSelected) ForestGreen else Color(0xFF14532D),
                         modifier = Modifier.height(26.dp)
                     ) {
                         Box(
@@ -118,7 +119,7 @@ fun SoccerPitch2D(
                                 text = label,
                                 fontSize = 10.sp,
                                 fontWeight = if (isSelected) FontWeight.Black else FontWeight.Bold,
-                                color = if (isSelected) DarkForestGreen else Color.White
+                                color = Color.White
                             )
                         }
                     }
@@ -435,8 +436,8 @@ fun SoccerPitch2D(
                     Text(player.name, fontWeight = FontWeight.Black, fontSize = 17.sp, textAlign = TextAlign.Center)
                     Spacer(Modifier.height(4.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Surface(color = DarkForestGreen, shape = RoundedCornerShape(4.dp)) {
-                            Text(player.position, color = LimeNeon, fontWeight = FontWeight.Bold, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                        Surface(color = ForestGreen, shape = RoundedCornerShape(4.dp)) {
+                            Text(player.position, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                         }
                         Spacer(Modifier.width(6.dp))
                         if (player.isCaptain) {

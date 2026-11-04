@@ -64,18 +64,19 @@ fun CourtReservationsTab(
                     onClick = onNewReservationClick,
                     shape = RoundedCornerShape(20.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = LimeNeon,
-                        contentColor = DarkForestGreen
+                        containerColor = ForestGreen,
+                        contentColor = Color.White
                     ),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
                     modifier = Modifier.height(38.dp).testTag("new_reservation_btn")
                 ) {
-                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(16.dp), tint = DarkForestGreen)
+                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.White)
                     Spacer(Modifier.width(4.dp))
                     Text(
                         text = "Nueva Reserva",
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.Black
+                        fontWeight = FontWeight.Black,
+                        color = Color.White
                     )
                 }
             }
@@ -132,15 +133,15 @@ fun CourtReservationsTab(
                     Surface(
                         onClick = { viewModel.reservationFilter = filterLabel },
                         shape = RoundedCornerShape(16.dp),
-                        color = if (isSelected) DarkForestGreen else Color.White,
-                        border = BorderStroke(1.dp, if (isSelected) DarkForestGreen else BorderGray),
+                        color = if (isSelected) ForestGreen else Color.White,
+                        border = BorderStroke(1.dp, if (isSelected) ForestGreen else BorderGray),
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
                             text = filterLabel,
                             fontSize = 10.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) LimeNeon else TextPrimary,
+                            color = if (isSelected) Color.White else TextPrimary,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                             maxLines = 1,
                             modifier = Modifier.padding(vertical = 7.dp, horizontal = 2.dp)
